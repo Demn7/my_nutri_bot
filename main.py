@@ -44,7 +44,6 @@ def main_menu_keyboard():
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, input_field_placeholder='Выберите действие...')
 
-
 # Инициализация базы данных (ваша существующая БД + новая для счетчика)
 def init_db():
     conn = sqlite3.connect('nutribot.db', check_same_thread=False)
