@@ -4,7 +4,7 @@ import aiohttp
 import asyncio
 import csv
 import io
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import datetime
 import random
 import os  # ДОБАВЛЕНО для Bothost.ru
@@ -1422,7 +1422,7 @@ async def handle_weight_input(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def show_progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     await track_activity(user_id, 'command')
-
+    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('SELECT date, weight FROM weight_tracking WHERE user_id = ? ORDER BY date', (user_id,))
@@ -1430,32 +1430,24 @@ async def show_progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     if len(records) < 2:
-        await update.message.reply_text('Для построения графика нужно как минимум 2 записи о весе.')
+        await update.message.reply_text('📊 Для анализа прогресса нужно как минимум 2 записи о весе.\nВведите вес через кнопку "⚖️ Ввести вес"')
         return
-
-    dates = [datetime.datetime.strptime(record['date'], '%Y-%m-%d').date() for record in records]
-    weights = [record['weight'] for record in records]
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(dates, weights, 'o-', color='#4CAF50', linewidth=2, markersize=6)
-    plt.title('📈 Прогресс изменения веса', fontsize=14, pad=20)
-    plt.xlabel('Дата', fontsize=12)
-    plt.ylabel('Вес (кг)', fontsize=12)
-    plt.grid(True, alpha=0.3)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=80, bbox_inches='tight')
-    buf.seek(0)
-    plt.close()
-
-    await update.message.reply_photo(
-        photo=buf,
-        caption=f'📊 Ваш прогресс: от {weights[0]} кг до {weights[-1]} кг'
-    )
-
-
+    
+    # Текстовый отчет вместо графика
+    first_weight = records[0]['weight']
+    last_weight = records[-1]['weight']
+    diff = last_weight - first_weight
+    trend = "📉 снизился" if diff < 0 else "📈 увеличился" if diff > 0 else "🔸 не изменился"
+    
+    message = f"📊 **Ваш прогресс:**\n\n"
+    message += f"• Первая запись: {first_weight} кг\n"
+    message += f"• Последняя запись: {last_weight} кг\n"
+    message += f"• Вес {trend} на {abs(diff):.1f} кг\n\n"
+    message += f"📝 Всего записей: {len(records)}\n"
+    message += f"💡 Продолжайте следить за весом!"
+    
+    await update.message.reply_text(message, parse_mode='Markdown')
+    
 # Экспорт данных в CSV
 async def export_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
