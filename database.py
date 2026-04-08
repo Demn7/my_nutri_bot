@@ -88,7 +88,6 @@ def update_visit_counter(user_id, username=None, first_name=None, last_name=None
     conn.commit()
     conn.close()
 
-
     return visit_count
 
 
