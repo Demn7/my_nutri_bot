@@ -22,3 +22,4 @@ RUN pip install --no-cache-dir matplotlib==3.8.2
 COPY . .
 
 CMD ["python", "main.py"]
+
