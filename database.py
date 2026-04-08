@@ -148,3 +148,4 @@ def get_visit_stats():
         'unique_week': unique_week,
         'unique_month': unique_month,
         'top_users': top_users
+    }
