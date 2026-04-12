@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Ключи API - ТЕПЕРЬ ЧЕРЕЗ ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ ДЛЯ BOTHOST.RU
 CALORIE_NINJAS_API_KEY = os.getenv('CALORIE_NINJAS_API_KEY', "kq1fOCH5cJ7wk+hwSrsdBA==k5Nqdgg0JB31Essz")
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', "sk-your-deepseek-api-key-here")
-BOT_TOKEN = "8234557496:AAH0xz2xHqfJbED_tQAj-HjGSo0NW6T56uo"  # Токен будет браться из настроек Bothost.ru
+BOT_TOKEN = os.getenv('BOT_TOKEN')   # Токен будет браться из настроек Bothost.ru
 
 if not BOT_TOKEN:
     raise ValueError("❌ Токен бота не найден! Добавьте BOT_TOKEN в переменные окружения на Bothost.ru")
