@@ -1,13 +1,14 @@
 import logging
 import sqlite3
 import aiohttp
-import asyncio
 import csv
 import io
 # import matplotlib.pyplot as plt
 import datetime
 import random
 import os  # ДОБАВЛЕНО для Bothost.ru
+from flask import Flask
+import threading
 from datetime import time, timedelta
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
@@ -15,6 +16,21 @@ from telegram.request import HTTPXRequest
 
 # ИМПОРТ НОВОГО МОДУЛЯ ДЛЯ СЧЕТЧИКА
 import database
+
+# Минимальный веб-сервер для Render
+web_app = Flask('')
+
+@web_app.route('/')
+@web_app.route('/health')
+def health():
+    return "OK", 200
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    web_app.run(host='0.0.0.0', port=port)
+
+# Запускаем веб-сервер в отдельном потоке
+threading.Thread(target=run_web, daemon=True).start()
 
 # Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
