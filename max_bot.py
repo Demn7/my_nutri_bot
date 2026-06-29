@@ -14,7 +14,7 @@ from flask import Flask
 # Правильные импорты для pyromax 0.7
 from pyromax import MaxApi, Dispatcher
 from pyromax.filters import CommandStart, Command
-from pyromax.types import Message
+from pyromax import Message
 
 import database
 
