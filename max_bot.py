@@ -10,7 +10,8 @@ import threading
 import asyncio
 from datetime import time, timedelta
 from flask import Flask
-
+import pyromax
+print(dir(pyromax))  # Временная диагностическая строка
 # Правильные импорты для pyromax 0.7
 from pyromax import MaxApi, Dispatcher
 from pyromax.filters import CommandStart, Command
