@@ -219,7 +219,7 @@ async def start_command(message: Message, max_api: MaxApi):
             f"🌟 Это ваш {visit_count}-й визит в бота!",
             reply_markup=main_menu_keyboard()
         )
-        else:
+    else:
         await message.answer(
             f"🍏 Привет, {user.first_name}!\n\n"
             "Я - твой персональный нутрициолог! 🌟\n"
