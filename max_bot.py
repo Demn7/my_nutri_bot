@@ -3,20 +3,19 @@ import sqlite3
 import aiohttp
 import csv
 import io
-# import matplotlib.pyplot as plt
 import datetime
 import random
-import os  # ДОБАВЛЕНО для Bothost.ru
-import asyncio
-from flask import Flask
+import os
 import threading
+import asyncio
 from datetime import time, timedelta
-from pyromax.api import MaxApi
-from pyromax.api.observer import Dispatcher as MaxDispatcher
+from flask import Flask
+
+# Правильные импорты для pyromax 0.7
+from pyromax import MaxApi, Dispatcher
 from pyromax.filters import CommandStart, Command
 from pyromax.types import Message
 
-# ИМПОРТ НОВОГО МОДУЛЯ ДЛЯ СЧЕТЧИКА
 import database
 
 # Минимальный веб-сервер для Render
@@ -195,7 +194,7 @@ async def track_activity(user_id: int, action: str):
     conn.commit()
     conn.close()
 # ======================== ДИСПЕТЧЕР MAX ========================
-dp = MaxDispatcher()
+dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def start_command(message: Message, max_api: MaxApi):
