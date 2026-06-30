@@ -15,9 +15,7 @@ import pyromax
 from pyromax import MaxApi, Dispatcher
 from pyromax.filters import CommandStart, Command
 from pyromax import Message
-
 import database
-
 # Минимальный веб-сервер для Render
 web_app = Flask('')
 
