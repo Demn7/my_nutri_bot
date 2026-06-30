@@ -11,6 +11,7 @@ import asyncio
 from datetime import time, timedelta
 from flask import Flask
 import pyromax
+print(dir(pyromax))
 # Правильные импорты для pyromax 
 from pyromax import MaxApi, Dispatcher
 from pyromax.filters import CommandStart, Command
