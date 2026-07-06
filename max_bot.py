@@ -1378,11 +1378,10 @@ async def activity_step(message: Any, max_api: MaxApi):
         reply_markup=main_menu_keyboard()
     )
 
-
 # ---------- СТАТИСТИКА СЕГОДНЯ ----------
-@dp.message(Command("stats"))
-@dp.message(lambda m: m.text == "📊 Статистика сегодня")
-async def show_today_stats(message: Message):
+@max_router.message(command="stats")
+@max_router.message(text="📊 Статистика сегодня")
+async def show_today_stats(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
     today = datetime.date.today().isoformat()
@@ -1392,7 +1391,10 @@ async def show_today_stats(message: Message):
     cur.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
     user_data = cur.fetchone()
     if not user_data:
-        await message.answer('Сначала завершите регистрацию через /start')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Сначала завершите регистрацию через /start'
+        )
         conn.close()
         return
 
@@ -1427,14 +1429,21 @@ async def show_today_stats(message: Message):
         response += "🍽 Приемы пищи сегодня:\n"
         for meal in meals:
             response += f"• {meal['meal_type']}: {meal['product_name']} - {meal['grams']}г ({meal['calories']:.0f} ккал)\n"
-        await message.answer(response)
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text=response
+        )
     else:
-        await message.answer("Сегодня еще не было введено приемов пищи.")
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text="Сегодня еще не было введено приемов пищи."
+        )
 
 
-@dp.message(Command("recommendations"))
-@dp.message(lambda m: m.text == "💡 Рекомендации ИИ")
-async def show_recommendations(message: Message, max_api: MaxApi):
+# ---------- РЕКОМЕНДАЦИИ ----------
+@max_router.message(command="recommendations")
+@max_router.message(text="💡 Рекомендации ИИ")
+async def show_recommendations(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
     today = datetime.date.today().isoformat()
@@ -1444,7 +1453,10 @@ async def show_recommendations(message: Message, max_api: MaxApi):
     cur.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
     user_data = cur.fetchone()
     if not user_data:
-        await message.answer('Сначала завершите регистрацию через /start')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Сначала завершите регистрацию через /start'
+        )
         conn.close()
         return
 
@@ -1458,39 +1470,51 @@ async def show_recommendations(message: Message, max_api: MaxApi):
     conn.close()
 
     if not totals['calories'] or totals['calories'] is None:
-        await message.answer(
-            "📝 Сегодня еще нет данных о питании.\n"
-            "Введите прием пищи чтобы получить персональные рекомендации."
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text="📝 Сегодня еще нет данных о питании.\nВведите прием пищи чтобы получить персональные рекомендации."
         )
         return
 
-    await message.answer("🧠 Анализирую ваше питание...")
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text="🧠 Анализирую ваше питание..."
+    )
 
     try:
         local_recommendations = generate_local_recommendations(dict(user_data), dict(totals))
-        await message.answer(f"💡 Персональные рекомендации:\n\n{local_recommendations}")
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text=f"💡 Персональные рекомендации:\n\n{local_recommendations}"
+        )
     except Exception as e:
         logger.error(f"Ошибка генерации рекомендаций: {e}")
-        await message.answer(
-            "📊 На основе ваших данных:\n\n"
-            f"• Съедено калорий: {totals['calories']:.0f} из {user_data['daily_calories']}\n"
-            f"• Белки: {totals['protein']:.1f}г\n"
-            f"• Жиры: {totals['fat']:.1f}г\n"
-            f"• Углеводы: {totals['carbs']:.1f}г\n\n"
-            "💡 Продолжайте следить за питанием!"
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text=(
+                "📊 На основе ваших данных:\n\n"
+                f"• Съедено калорий: {totals['calories']:.0f} из {user_data['daily_calories']}\n"
+                f"• Белки: {totals['protein']:.1f}г\n"
+                f"• Жиры: {totals['fat']:.1f}г\n"
+                f"• Углеводы: {totals['carbs']:.1f}г\n\n"
+                "💡 Продолжайте следить за питанием!"
+            )
         )
 
 
-# Обработчик ввода веса
-@dp.message(lambda m: m.text == "⚖️ Ввести вес")
-async def weight_tracking_cmd(message: Message, max_api: MaxApi):
+# ---------- ВВОД ВЕСА ----------
+@max_router.message(text="⚖️ Ввести вес")
+async def weight_tracking_cmd(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     user_states[user_id] = 'weight_input'
-    await message.answer('Введите ваш текущий вес (в кг):')
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text='Введите ваш текущий вес (в кг):'
+    )
 
 
-@dp.message()
-async def handle_weight_input(message: Message, max_api: MaxApi):
+@max_router.message()
+async def handle_weight_input(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'weight_input':
         return
@@ -1498,7 +1522,10 @@ async def handle_weight_input(message: Message, max_api: MaxApi):
     try:
         weight_val = float(message.text)
         if weight_val < 30 or weight_val > 300:
-            await message.answer('Пожалуйста, введите реальный вес (30-300 кг):')
+            await max_api.send_message(
+                chat_id=message.from_user.id,
+                text='Пожалуйста, введите реальный вес (30-300 кг):'
+            )
             return
 
         conn = get_db_connection()
@@ -1510,15 +1537,22 @@ async def handle_weight_input(message: Message, max_api: MaxApi):
 
         await track_activity(user_id, 'weight')
         user_states.pop(user_id, None)
-        await message.answer(f'✅ Вес {weight_val} кг сохранен!', reply_markup=main_menu_keyboard())
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text=f'✅ Вес {weight_val} кг сохранен!',
+            reply_markup=main_menu_keyboard()
+        )
 
     except ValueError:
-        await message.answer('Пожалуйста, введите число:')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, введите число:'
+        )
 
-
-@dp.message(Command("progress"))
-@dp.message(lambda m: m.text == "📈 График прогресса")
-async def show_progress(message: Message, max_api: MaxApi):
+# ---------- ГРАФИК ПРОГРЕССА ----------
+@max_router.message(command="progress")
+@max_router.message(text="📈 График прогресса")
+async def show_progress(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1529,7 +1563,10 @@ async def show_progress(message: Message, max_api: MaxApi):
     conn.close()
 
     if len(records) < 2:
-        await message.answer('📊 Для построения графика нужно как минимум 2 записи о весе.\nВведите вес через кнопку "⚖️ Ввести вес"')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='📊 Для построения графика нужно как минимум 2 записи о весе.\nВведите вес через кнопку "⚖️ Ввести вес"'
+        )
         return
 
     dates = [datetime.datetime.strptime(record['date'], '%Y-%m-%d').date() for record in records]
@@ -1549,11 +1586,17 @@ async def show_progress(message: Message, max_api: MaxApi):
     buf.seek(0)
     plt.close()
 
-    await message.answer_photo(photo=buf, caption=f'📊 Ваш прогресс: от {weights[0]} кг до {weights[-1]} кг')
+    # Отправляем фото через MAX API
+    await max_api.send_photo(
+        chat_id=message.from_user.id,
+        photo=buf,
+        caption=f'📊 Ваш прогресс: от {weights[0]} кг до {weights[-1]} кг'
+    )
 
 
-@dp.message(lambda m: m.text == "📤 Экспорт данных")
-async def export_data(message: Message, max_api: MaxApi):
+# ---------- ЭКСПОРТ ДАННЫХ ----------
+@max_router.message(text="📤 Экспорт данных")
+async def export_data(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1566,7 +1609,10 @@ async def export_data(message: Message, max_api: MaxApi):
     conn.close()
 
     if not food_data and not weight_data:
-        await message.answer('Нет данных для экспорта.')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Нет данных для экспорта.'
+        )
         return
 
     output = io.StringIO()
@@ -1590,31 +1636,37 @@ async def export_data(message: Message, max_api: MaxApi):
     csv_data = output.getvalue().encode('utf-8')
     output.close()
 
-    await message.answer_document(
+    # Отправляем документ через MAX API
+    await max_api.send_document(
+        chat_id=message.from_user.id,
         document=('nutrition_data.csv', csv_data),
         caption='📤 Ваши данные экспортированы в CSV'
     )
+    
 
-
-# Настройка уведомлений
-@dp.message(lambda m: m.text == "⚙️ Настройки")
-async def notification_settings(message: Message, max_api: MaxApi):
+# ---------- НАСТРОЙКА УВЕДОМЛЕНИЙ ----------
+@max_router.message(text="⚙️ Настройки")
+async def notification_settings(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     user_states[user_id] = 'notification'
-    await message.answer(
-        'Выберите время уведомлений:',
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text='Выберите время уведомлений:',
         reply_markup=[['09:00', '12:00'], ['18:00', 'Выключить']]
     )
 
-@dp.message()
-async def handle_notification_time(message: Message, max_api: MaxApi):
+@max_router.message()
+async def handle_notification_time(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'notification':
         return
 
     time_str = message.text
     if time_str not in ['09:00', '12:00', '18:00', 'Выключить']:
-        await message.answer('Пожалуйста, выберите из предложенных вариантов.')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, выберите из предложенных вариантов.'
+        )
         return
 
     conn = get_db_connection()
@@ -1630,13 +1682,17 @@ async def handle_notification_time(message: Message, max_api: MaxApi):
     conn.commit()
     conn.close()
     user_states.pop(user_id, None)
-    await message.answer(response, reply_markup=main_menu_keyboard())
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text=response,
+        reply_markup=main_menu_keyboard()
+    )
 
 
 # ---------- ПРОФИЛЬ ----------
-@dp.message(Command("profile"))
-@dp.message(lambda m: m.text == "👤 Мой профиль")
-async def show_profile(message: Message):
+@max_router.message(command="profile")
+@max_router.message(text="👤 Мой профиль")
+async def show_profile(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1645,7 +1701,10 @@ async def show_profile(message: Message):
     cur.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
     user_data = cur.fetchone()
     if not user_data:
-        await message.answer('Сначала завершите регистрацию через /start')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Сначала завершите регистрацию через /start'
+        )
         conn.close()
         return
 
@@ -1687,13 +1746,16 @@ async def show_profile(message: Message):
     else:
         response += "📊 **Сегодня еще не было приемов пищи**\n"
 
-    await message.answer(response)
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text=response
+    )
 
 
-# Показать цели
-@dp.message(Command("goals"))
-@dp.message(lambda m: m.text == "🎯 Мои цели")
-async def show_goals(message: Message, max_api: MaxApi):
+# ---------- МОИ ЦЕЛИ ----------
+@max_router.message(command="goals")
+@max_router.message(text="🎯 Мои цели")
+async def show_goals(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1704,7 +1766,10 @@ async def show_goals(message: Message, max_api: MaxApi):
     conn.close()
 
     if not user_data:
-        await message.answer('Сначала завершите регистрацию через /start')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Сначала завершите регистрацию через /start'
+        )
         return
 
     goal_text = {'loss': 'Похудение', 'maintain': 'Поддержание веса', 'gain': 'Набор массы'}
@@ -1724,7 +1789,10 @@ async def show_goals(message: Message, max_api: MaxApi):
         f"• Жиры: {user_data['weight'] * 0.8:.0f}г\n"
         f"• Углеводы: {(user_data['daily_calories'] - user_data['weight'] * 1.5 * 4 - user_data['weight'] * 0.8 * 9) / 4:.0f}г"
     )
-    await message.answer(response)
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text=response
+    )
 
 
 # Обработчик главного меню
