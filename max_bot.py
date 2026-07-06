@@ -10,13 +10,12 @@ import threading
 import asyncio
 from datetime import time, timedelta
 from flask import Flask
-import pyromax
-print(dir(pyromax))
-# Правильные импорты для pyromax 
-from pyromax import MaxApi, Dispatcher
-from pyromax.filters import CommandStart, Command
-from pyromax import Message
-import database
+from pyromax import Router, MaxApi
+from typing import Any
+# Импорты для баз данных
+from database import update_visit_counter
+from database import init_db as init_visits_db
+from main import init_db as init_main_db
 # Минимальный веб-сервер для Render
 web_app = Flask('')
 
@@ -58,7 +57,6 @@ def main_menu_keyboard():
         ['💡 Рекомендации ИИ', '🎯 Мои цели'],
         ['⚙️ Настройки', '👤 Мой профиль']
     ]
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, input_field_placeholder='Выберите действие...')
 
 # Инициализация базы данных (ваша существующая БД + новая для счетчика)
 def init_db():
@@ -192,13 +190,14 @@ async def track_activity(user_id: int, action: str):
 
     conn.commit()
     conn.close()
-# ======================== ДИСПЕТЧЕР MAX ========================
-dp = Dispatcher()
+# ======================== РОУТЕР MAX ========================
+max_router = Router()
 
-@dp.message(CommandStart())
-async def start_command(message: Message, max_api: MaxApi):
+# ---------- СТАРТ ----------
+@max_router.message(command="start")
+async def start_command(message: Any, max_api: MaxApi):
     user = message.from_user
-    visit_count = database.update_visit_counter(
+    visit_count = update_visit_counter(  # без database.
         user_id=user.id,
         username=user.username,
         first_name=user.first_name,
@@ -212,46 +211,50 @@ async def start_command(message: Message, max_api: MaxApi):
     conn.close()
 
     if existing_user:
-        await message.answer(
-            f"🍎 С возвращением, {user.first_name}!\n"
-            f"🌟 Это ваш {visit_count}-й визит в бота!",
+        await max_api.send_message(
+            chat_id=user.id,
+            text=(
+                f"🍎 С возвращением, {user.first_name}!\n"
+                f"🌟 Это ваш {visit_count}-й визит в бота!"
+            ),
             reply_markup=main_menu_keyboard()
         )
     else:
-        await message.answer(
-            f"🍏 Привет, {user.first_name}!\n\n"
-            "Я - твой персональный нутрициолог! 🌟\n"
-            "Это твой первый визит в бота!\n\n"
-            "Помогу тебе:\n"
-            "• 📊 Следить за питанием и калориями\n"
-            "• 🎯 Достигать целей по весу\n"
-            "• 💪 Контролировать белки, жиры, углеводы\n"
-            "• 🧠 Получать умные рекомендации\n\n"
-            "Давай создадим твой персональный план! 🚀"
+        await max_api.send_message(
+            chat_id=user.id,
+            text=(
+                f"🍏 Привет, {user.first_name}!\n\n"
+                "Я - твой персональный нутрициолог! 🌟\n"
+                "Это твой первый визит в бота!\n\n"
+                "Помогу тебе:\n"
+                "• 📊 Следить за питанием и калориями\n"
+                "• 🎯 Достигать целей по весу\n"
+                "• 💪 Контролировать белки, жиры, углеводы\n"
+                "• 🧠 Получать умные рекомендации\n\n"
+                "Давай создадим твой персональный план! 🚀"
+            )
         )
-        await message.answer(
-            'Для начала скажи, какой у тебя пол?',
+        await max_api.send_message(
+            chat_id=user.id,
+            text='Для начала скажи, какой у тебя пол?',
             reply_markup=[['👨 Мужской', '👩 Женский']]
         )
-        user_states[message.from_user.id] = 'gender'
-        return
+        user_states[user.id] = 'gender'
 
-@dp.message(Command("help"))
-async def help_command(message: Message):
-    await message.answer(
-        "/start — начать\n"
-        "/stats — статистика за сегодня\n"
-        "/profile — мой профиль\n"
-        "/goals — мои цели\n"
-        "/progress — график веса\n"
-        "/export — выгрузить данные CSV"
+# ---------- HELP ----------
+@max_router.message(command="help")
+async def help_command(message: Any, max_api: MaxApi):
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text=(
+            "/start — начать\n"
+            "/stats — статистика за сегодня\n"
+            "/profile — мой профиль\n"
+            "/goals — мои цели\n"
+            "/progress — график веса\n"
+            "/export — выгрузить данные CSV"
+        )
     )
-
-# Адаптируйте остальные обработчики из main.py по тому же принципу:
-# - @dp.message(Command("stats")) → show_today_stats
-# - @dp.message(lambda m: m.text == "📊 Статистика сегодня") → show_today_stats
-# - @dp.message(lambda m: m.text == "👤 Мой профиль") → show_profile
-# - и т.д.
 
 # РАСШИРЕННАЯ БАЗА ПРОДУКТОВ (300+ продуктов)
 LOCAL_PRODUCTS = {
