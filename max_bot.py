@@ -1141,19 +1141,22 @@ def generate_local_recommendations(user_data, nutrition_data):
     print(f"🔍 DEBUG: Сгенерированные рекомендации: {result}")
     return result  # ВАЖНО: возвращаем результат!
 
-
 # ======================== АДМИН-СТАТИСТИКА (MAX) ========================
-@dp.message(Command("admin_stats"))
-@dp.message(lambda m: m.text == "📊 Статистика администратора")
-async def admin_stats(message: Message, max_api: MaxApi):
+@max_router.message(command="admin_stats")
+@max_router.message(text="📊 Статистика администратора")
+async def admin_stats(message: Any, max_api: MaxApi):
     """Команда для просмотра статистики посещений (только для админа)"""
     ADMIN_ID = 5199340101  # ЗАМЕНИТЕ НА СВОЙ TELEGRAM ID!
 
     if message.from_user.id != ADMIN_ID:
-        await message.answer("❌ У вас нет прав для просмотра этой статистики.")
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text="❌ У вас нет прав для просмотра этой статистики."
+        )
         return
 
-    stats = database.get_visit_stats()
+    from database import get_visit_stats
+    stats = get_visit_stats()
 
     response = (
         f"📊 **СТАТИСТИКА ПОСЕЩЕНИЙ**\n\n"
@@ -1169,26 +1172,33 @@ async def admin_stats(message: Message, max_api: MaxApi):
         name = first_name or username or f"ID:{user_id}"
         response += f"{i}. {name} — {visits} визитов\n"
 
-    await message.answer(response)
-# Команда /start (ОБНОВЛЕНА С ДОБАВЛЕНИЕМ СЧЕТЧИКА
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text=response
+    )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 1: ПОЛ) ========================
-async def gender_step(message: Message, max_api: MaxApi):
+async def gender_step(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     text = message.text
 
     if text not in ['👨 Мужской', '👩 Женский']:
-        await message.answer('Пожалуйста, выберите пол из предложенных вариантов:',
-                             reply_markup=[['👨 Мужской', '👩 Женский']])
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, выберите пол из предложенных вариантов:',
+            reply_markup=[['👨 Мужской', '👩 Женский']]
+        )
         return
 
     user_data_registry[user_id] = {'gender': text}
-    await message.answer('Сколько тебе лет?')
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text='Сколько тебе лет?'
+    )
     user_states[user_id] = 'age'
 
-
 # ======================== РЕГИСТРАЦИЯ (ШАГ 2: ВОЗРАСТ) ========================
-async def age_step(message: Message, max_api: MaxApi):
+async def age_step(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'age':
         return
@@ -1196,17 +1206,25 @@ async def age_step(message: Message, max_api: MaxApi):
     try:
         age_val = int(message.text)
         if age_val < 10 or age_val > 100:
-            await message.answer('Пожалуйста, введите реальный возраст (10-100 лет):')
+            await max_api.send_message(
+                chat_id=message.from_user.id,
+                text='Пожалуйста, введите реальный возраст (10-100 лет):'
+            )
             return
         user_data_registry[user_id]['age'] = age_val
         user_states[user_id] = 'height'
-        await message.answer('Какой у тебя рост (в см)?')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Какой у тебя рост (в см)?'
+        )
     except ValueError:
-        await message.answer('Пожалуйста, введи число.')
-
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, введи число.'
+        )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 3: РОСТ) ========================
-async def height_step(message: Message, max_api: MaxApi):
+async def height_step(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'height':
         return
@@ -1214,17 +1232,25 @@ async def height_step(message: Message, max_api: MaxApi):
     try:
         height_val = int(message.text)
         if height_val < 100 or height_val > 250:
-            await message.answer('Пожалуйста, введите реальный рост (100-250 см):')
+            await max_api.send_message(
+                chat_id=message.from_user.id,
+                text='Пожалуйста, введите реальный рост (100-250 см):'
+            )
             return
         user_data_registry[user_id]['height'] = height_val
         user_states[user_id] = 'weight'
-        await message.answer('Сколько ты весишь (в кг)?')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Сколько ты весишь (в кг)?'
+        )
     except ValueError:
-        await message.answer('Пожалуйста, введи число.')
-
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, введи число.'
+        )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 4: ВЕС) ========================
-async def weight_step(message: Message, max_api: MaxApi):
+async def weight_step(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'weight':
         return
@@ -1232,49 +1258,61 @@ async def weight_step(message: Message, max_api: MaxApi):
     try:
         weight_val = float(message.text)
         if weight_val < 30 or weight_val > 300:
-            await message.answer('Пожалуйста, введите реальный вес (30-300 кг):')
+            await max_api.send_message(
+                chat_id=message.from_user.id,
+                text='Пожалуйста, введите реальный вес (30-300 кг):'
+            )
             return
         user_data_registry[user_id]['weight'] = weight_val
         user_states[user_id] = 'goal'
-        await message.answer(
-            'Какова твоя цель?',
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Какова твоя цель?',
             reply_markup=[['Похудение', 'Поддержание'], ['Набор массы']]
         )
     except ValueError:
-        await message.answer('Пожалуйста, введи число.')
-
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, введи число.'
+        )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 5: ЦЕЛЬ) ========================
-async def goal_step(message: Message, max_api: MaxApi):
+async def goal_step(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'goal':
         return
 
     text = message.text
     if text not in ['Похудение', 'Поддержание', 'Набор массы']:
-        await message.answer('Пожалуйста, выберите цель из предложенных:',
-                             reply_markup=[['Похудение', 'Поддержание'], ['Набор массы']])
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, выберите цель из предложенных:',
+            reply_markup=[['Похудение', 'Поддержание'], ['Набор массы']]
+        )
         return
 
     goal_map = {'Похудение': 'loss', 'Поддержание': 'maintain', 'Набор массы': 'gain'}
     user_data_registry[user_id]['goal'] = goal_map.get(text, 'maintain')
     user_states[user_id] = 'activity'
-    await message.answer(
-        'Какой у тебя уровень активности?',
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text='Какой у тебя уровень активности?',
         reply_markup=[['Сидячий', 'Легкая'], ['Умеренная', 'Высокая']]
     )
 
-
 # ======================== РЕГИСТРАЦИЯ (ШАГ 6: АКТИВНОСТЬ) ========================
-async def activity_step(message: Message, max_api: MaxApi):
+async def activity_step(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'activity':
         return
 
     text = message.text
     if text not in ['Сидячий', 'Легкая', 'Умеренная', 'Высокая']:
-        await message.answer('Пожалуйста, выберите уровень активности из предложенных:',
-                             reply_markup=[['Сидячий', 'Легкая'], ['Умеренная', 'Высокая']])
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, выберите уровень активности из предложенных:',
+            reply_markup=[['Сидячий', 'Легкая'], ['Умеренная', 'Высокая']]
+        )
         return
 
     activity_map = {'Сидячий': 1.2, 'Легкая': 1.375, 'Умеренная': 1.55, 'Высокая': 1.725}
@@ -1290,7 +1328,10 @@ async def activity_step(message: Message, max_api: MaxApi):
     goal = user_data.get('goal')
 
     if not all([gender, weight, height, age, goal]):
-        await message.answer('❌ Ошибка: не все данные заполнены. Начните регистрацию заново с /start')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='❌ Ошибка: не все данные заполнены. Начните регистрацию заново с /start'
+        )
         user_states.pop(user_id, None)
         user_data_registry.pop(user_id, None)
         return
@@ -1323,14 +1364,17 @@ async def activity_step(message: Message, max_api: MaxApi):
     user_states.pop(user_id, None)
     user_data_registry.pop(user_id, None)
 
-    await message.answer(
-        f'🎉 Регистрация завершена!\n\n'
-        f'📊 Ваша дневная норма:\n'
-        f'• Калории: {daily_calories} ккал\n'
-        f'• Белки: {weight * 1.5:.0f}г\n'
-        f'• Жиры: {weight * 0.8:.0f}г\n'
-        f'• Углеводы: {(daily_calories - weight * 1.5 * 4 - weight * 0.8 * 9) / 4:.0f}г\n\n'
-        f'Теперь ты можешь отслеживать свое питание!',
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text=(
+            f'🎉 Регистрация завершена!\n\n'
+            f'📊 Ваша дневная норма:\n'
+            f'• Калории: {daily_calories} ккал\n'
+            f'• Белки: {weight * 1.5:.0f}г\n'
+            f'• Жиры: {weight * 0.8:.0f}г\n'
+            f'• Углеводы: {(daily_calories - weight * 1.5 * 4 - weight * 0.8 * 9) / 4:.0f}г\n\n'
+            f'Теперь ты можешь отслеживать свое питание!'
+        ),
         reply_markup=main_menu_keyboard()
     )
 
