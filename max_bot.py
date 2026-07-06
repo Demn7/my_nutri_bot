@@ -1795,9 +1795,9 @@ async def show_goals(message: Any, max_api: MaxApi):
     )
 
 
-# Обработчик главного меню
-@dp.message()
-async def handle_main_menu(message: Message, max_api: MaxApi):
+# ---------- ОБРАБОТЧИК ГЛАВНОГО МЕНЮ ----------
+@max_router.message()
+async def handle_main_menu(message: Any, max_api: MaxApi):
     # 1. Получаем ID пользователя
     user_id = message.from_user.id
 
@@ -1864,41 +1864,49 @@ async def handle_main_menu(message: Message, max_api: MaxApi):
     elif text == '📤 Экспорт данных':
         await export_data(message, max_api)
     else:
-        await message.answer(
-            'Используйте кнопки меню для навигации',
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Используйте кнопки меню для навигации',
             reply_markup=main_menu_keyboard()
         )
 
 
-
-@dp.message(lambda m: m.text == "🍽 Ввести прием пищи")
-async def start_meal_input(message: Message, max_api: MaxApi):
+# ---------- ВВОД ПРИЕМА ПИЩИ ----------
+@max_router.message(text="🍽 Ввести прием пищи")
+async def start_meal_input(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     user_states[user_id] = 'meal_type'
-    await message.answer(
-        'Выберите прием пищи:',
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text='Выберите прием пищи:',
         reply_markup=[['Завтрак', 'Обед'], ['Ужин', 'Перекус']]
     )
 
 
-@dp.message()
-async def meal_type_handler(message: Message, max_api: MaxApi):
+@max_router.message()
+async def meal_type_handler(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'meal_type':
         return
 
     meal_type = message.text
     if meal_type not in ['Завтрак', 'Обед', 'Ужин', 'Перекус']:
-        await message.answer('Пожалуйста, выберите из предложенных вариантов.')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, выберите из предложенных вариантов.'
+        )
         return
 
     user_meal_data[user_id] = {'meal_type': meal_type}
     user_states[user_id] = 'product_name'
-    await message.answer('Что ты съел(а)? Укажи продукт:')
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text='Что ты съел(а)? Укажи продукт:'
+    )
 
 
-@dp.message()
-async def product_name_handler(message: Message, max_api: MaxApi):
+@max_router.message()
+async def product_name_handler(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'product_name':
         return
@@ -1906,29 +1914,42 @@ async def product_name_handler(message: Message, max_api: MaxApi):
     if message.text.lower() in ['завершить', 'готово', 'стоп', 'конец', 'отмена']:
         user_states.pop(user_id, None)
         user_meal_data.pop(user_id, None)
-        await message.answer('✅ Ввод приема пищи завершен!', reply_markup=main_menu_keyboard())
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='✅ Ввод приема пищи завершен!',
+            reply_markup=main_menu_keyboard()
+        )
         return
 
     product_name = message.text
     user_meal_data[user_id]['product_name'] = product_name
 
-    await message.answer("🔍 Ищу информацию о продукте...")
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text="🔍 Ищу информацию о продукте..."
+    )
     product = await search_product_api(product_name)
 
     if product:
         user_meal_data[user_id]['product'] = product
         user_states[user_id] = 'grams'
-        await message.answer(
-            f"✅ Найдено: {product['name']}\n"
-            f"💡 100г содержит: {product['calories']} ккал\n\n"
-            f"Сколько грамм ты съел(а)?"
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text=(
+                f"✅ Найдено: {product['name']}\n"
+                f"💡 100г содержит: {product['calories']} ккал\n\n"
+                f"Сколько грамм ты съел(а)?"
+            )
         )
     else:
-        await message.answer('❌ Продукт не найден. Попробуй другой продукт:')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='❌ Продукт не найден. Попробуй другой продукт:'
+        )
 
 
-@dp.message()
-async def grams_handler(message: Message, max_api: MaxApi):
+@max_router.message()
+async def grams_handler(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'grams':
         return
@@ -1936,19 +1957,29 @@ async def grams_handler(message: Message, max_api: MaxApi):
     if message.text.lower() in ['завершить', 'готово', 'стоп', 'конец', 'отмена']:
         user_states.pop(user_id, None)
         user_meal_data.pop(user_id, None)
-        await message.answer('✅ Ввод приема пищи завершен!', reply_markup=main_menu_keyboard())
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='✅ Ввод приема пищи завершен!',
+            reply_markup=main_menu_keyboard()
+        )
         return
 
     try:
         grams = float(message.text)
         if grams <= 0 or grams > 5000:
-            await message.answer('Пожалуйста, введите реальное количество грамм (1-5000):')
+            await max_api.send_message(
+                chat_id=message.from_user.id,
+                text='Пожалуйста, введите реальное количество грамм (1-5000):'
+            )
             return
 
         meal_data = user_meal_data.get(user_id, {})
         product = meal_data.get('product')
         if not product:
-            await message.answer('❌ Ошибка: продукт не найден. Начните заново.')
+            await max_api.send_message(
+                chat_id=message.from_user.id,
+                text='❌ Ошибка: продукт не найден. Начните заново.'
+            )
             user_states.pop(user_id, None)
             user_meal_data.pop(user_id, None)
             return
@@ -1976,33 +2007,47 @@ async def grams_handler(message: Message, max_api: MaxApi):
         user_states.pop(user_id, None)
         user_meal_data.pop(user_id, None)
 
-        await message.answer(
-            f'✅ Успешно добавлено!\n\n'
-            f'🍽 {meal_type}: {product_name} - {grams}г\n'
-            f'📊 Пищевая ценность:\n'
-            f'• Калории: {calories:.0f} ккал\n'
-            f'• Белки: {protein:.1f}г\n'
-            f'• Жиры: {fat:.1f}г\n'
-            f'• Углеводы: {carbs:.1f}г\n\n'
-            f'💡 Чтобы добавить еще продукт, введите "🍽 Ввести прием пищи"',
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text=(
+                f'✅ Успешно добавлено!\n\n'
+                f'🍽 {meal_type}: {product_name} - {grams}г\n'
+                f'📊 Пищевая ценность:\n'
+                f'• Калории: {calories:.0f} ккал\n'
+                f'• Белки: {protein:.1f}г\n'
+                f'• Жиры: {fat:.1f}г\n'
+                f'• Углеводы: {carbs:.1f}г\n\n'
+                f'💡 Чтобы добавить еще продукт, введите "🍽 Ввести прием пищи"'
+            ),
             reply_markup=main_menu_keyboard()
         )
 
     except ValueError:
-        await message.answer('Пожалуйста, введи число:')
+        await max_api.send_message(
+            chat_id=message.from_user.id,
+            text='Пожалуйста, введи число:'
+        )
 
 
-@dp.message(Command("cancel"))
-async def cancel(message: Message, max_api: MaxApi):
+# ---------- ОТМЕНА ----------
+@max_router.message(command="cancel")
+async def cancel(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     user_states.pop(user_id, None)
     user_meal_data.pop(user_id, None)
-    await message.answer('❌ Операция отменена.', reply_markup=main_menu_keyboard())
+    await max_api.send_message(
+        chat_id=message.from_user.id,
+        text='❌ Операция отменена.',
+        reply_markup=main_menu_keyboard()
+    )
 
 
 # ======================== ЗАПУСК БОТА MAX ========================
 async def main():
-    init_db()
+    # Инициализируем обе базы данных
+    init_visits_db()   # для счётчика
+    init_main_db()     # для основных данных
+    
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
         raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения")
@@ -2011,11 +2056,10 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
-    bot = await MaxApi(token=token)
-    await bot.reload_if_connection_broke(dp)
+    bot = MaxApi(token=token, router=max_router)
+    await bot.start_polling()
 
 
 if __name__ == '__main__':
     import asyncio
-
     asyncio.run(main())
