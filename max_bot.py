@@ -2077,8 +2077,8 @@ async def cancel(message: Any, max_api: MaxApi):
 # ======================== ЗАПУСК БОТА MAX ========================
 async def main():
     # Инициализируем обе базы данных
-    init_visits_db()   # для счётчика
-    init_db()     # для основных данных
+    init_visits_db()
+    init_db()
     
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
@@ -2088,8 +2088,9 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
+    # Правильный способ для pyromax 0.7.7
     bot = MaxApi(token=token, router=max_router)
-    await bot.start()
+    await bot.start_polling()
 
 
 if __name__ == '__main__':
