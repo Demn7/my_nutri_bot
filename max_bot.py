@@ -15,7 +15,7 @@ from typing import Any
 # Импорты для баз данных
 from database import update_visit_counter
 from database import init_db as init_visits_db
-from main import init_db as init_main_db
+
 # Минимальный веб-сервер для Render
 web_app = Flask('')
 
@@ -2046,7 +2046,7 @@ async def cancel(message: Any, max_api: MaxApi):
 async def main():
     # Инициализируем обе базы данных
     init_visits_db()   # для счётчика
-    init_main_db()     # для основных данных
+    init_db()     # для основных данных
     
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
