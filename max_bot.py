@@ -1144,8 +1144,11 @@ def generate_local_recommendations(user_data, nutrition_data):
 
 # ======================== АДМИН-СТАТИСТИКА (MAX) ========================
 @max_router.message(Command("admin_stats"))
-@max_router.message(text="📊 Статистика администратора")
+@max_router.message()
 async def admin_stats(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "📊 Статистика администратора":
+        return
     """Команда для просмотра статистики посещений (только для админа)"""
     ADMIN_ID = 5199340101  # ЗАМЕНИТЕ НА СВОЙ TELEGRAM ID!
 
@@ -1381,8 +1384,11 @@ async def activity_step(message: Any, max_api: MaxApi):
 
 # ---------- СТАТИСТИКА СЕГОДНЯ ----------
 @max_router.message(Command("stats"))
-@max_router.message(text="📊 Статистика сегодня")
+@max_router.message()
 async def show_today_stats(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "📊 Статистика сегодня":
+        return
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
     today = datetime.date.today().isoformat()
@@ -1443,8 +1449,11 @@ async def show_today_stats(message: Any, max_api: MaxApi):
 
 # ---------- РЕКОМЕНДАЦИИ ----------
 @max_router.message(Command("recommendations"))
-@max_router.message(text="💡 Рекомендации ИИ")
+@max_router.message()
 async def show_recommendations(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "💡 Рекомендации ИИ":
+        return
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
     today = datetime.date.today().isoformat()
@@ -1504,8 +1513,11 @@ async def show_recommendations(message: Any, max_api: MaxApi):
 
 
 # ---------- ВВОД ВЕСА ----------
-@max_router.message(text="⚖️ Ввести вес")
+@max_router.message()
 async def weight_tracking_cmd(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "⚖️ Ввести вес":
+        return
     user_id = message.from_user.id
     user_states[user_id] = 'weight_input'
     await max_api.send_message(
@@ -1552,8 +1564,11 @@ async def handle_weight_input(message: Any, max_api: MaxApi):
 
 # ---------- ГРАФИК ПРОГРЕССА ----------
 @max_router.message(Command("progress"))
-@max_router.message(text="📈 График прогресса")
+@max_router.message()
 async def show_progress(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "📈 График прогресса":
+        return
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1596,8 +1611,11 @@ async def show_progress(message: Any, max_api: MaxApi):
 
 
 # ---------- ЭКСПОРТ ДАННЫХ ----------
-@max_router.message(text="📤 Экспорт данных")
+@max_router.message()
 async def export_data(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "📤 Экспорт данных":
+        return
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1646,8 +1664,11 @@ async def export_data(message: Any, max_api: MaxApi):
     
 
 # ---------- НАСТРОЙКА УВЕДОМЛЕНИЙ ----------
-@max_router.message(text="⚙️ Настройки")
+@max_router.message()
 async def notification_settings(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "⚙️ Настройки":
+        return
     user_id = message.from_user.id
     user_states[user_id] = 'notification'
     await max_api.send_message(
@@ -1692,8 +1713,11 @@ async def handle_notification_time(message: Any, max_api: MaxApi):
 
 # ---------- ПРОФИЛЬ ----------
 @max_router.message(Command("profile"))
-@max_router.message(text="👤 Мой профиль")
+@max_router.message()
 async def show_profile(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "👤 Мой профиль":
+        return
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1755,8 +1779,11 @@ async def show_profile(message: Any, max_api: MaxApi):
 
 # ---------- МОИ ЦЕЛИ ----------
 @max_router.message(Command("goals"))
-@max_router.message(text="🎯 Мои цели")
+@max_router.message()
 async def show_goals(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "🎯 Мои цели":
+        return
     user_id = message.from_user.id
     await track_activity(user_id, 'command')
 
@@ -1873,8 +1900,11 @@ async def handle_main_menu(message: Any, max_api: MaxApi):
 
 
 # ---------- ВВОД ПРИЕМА ПИЩИ ----------
-@max_router.message(text="🍽 Ввести прием пищи")
+@max_router.message()
 async def start_meal_input(message: Any, max_api: MaxApi):
+     # Проверяем, что сообщение — это нужный текст
+    if message.text != "🍽 Ввести прием пищи":
+        return
     user_id = message.from_user.id
     user_states[user_id] = 'meal_type'
     await max_api.send_message(
