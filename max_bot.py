@@ -10,7 +10,7 @@ import threading
 import asyncio
 from datetime import time, timedelta
 from flask import Flask
-from pyromax import Router, MaxApi
+from pyromax import Router, MaxApi, Command
 from typing import Any
 # Импорты для баз данных
 from database import update_visit_counter
