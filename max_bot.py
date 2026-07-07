@@ -2088,7 +2088,7 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
-   bot = MaxApi(token=token, router=max_router)
+    bot = MaxApi(token=token, router=max_router)
     await bot.start()
 
 
