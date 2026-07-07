@@ -194,7 +194,7 @@ async def track_activity(user_id: int, action: str):
 max_router = Router()
 
 # ---------- СТАРТ ----------
-@max_router.message(command="start")
+@max_router.message(Command("start"))
 async def start_command(message: Any, max_api: MaxApi):
     user = message.from_user
     visit_count = update_visit_counter(  # без database.
@@ -242,7 +242,7 @@ async def start_command(message: Any, max_api: MaxApi):
         user_states[user.id] = 'gender'
 
 # ---------- HELP ----------
-@max_router.message(command="help")
+@max_router.message(Command("help"))
 async def help_command(message: Any, max_api: MaxApi):
     await max_api.send_message(
         chat_id=message.from_user.id,
@@ -1142,7 +1142,7 @@ def generate_local_recommendations(user_data, nutrition_data):
     return result  # ВАЖНО: возвращаем результат!
 
 # ======================== АДМИН-СТАТИСТИКА (MAX) ========================
-@max_router.message(command="admin_stats")
+@max_router.message(Command("admin_stats"))
 @max_router.message(text="📊 Статистика администратора")
 async def admin_stats(message: Any, max_api: MaxApi):
     """Команда для просмотра статистики посещений (только для админа)"""
@@ -1379,7 +1379,7 @@ async def activity_step(message: Any, max_api: MaxApi):
     )
 
 # ---------- СТАТИСТИКА СЕГОДНЯ ----------
-@max_router.message(command="stats")
+@max_router.message(Command("stats"))
 @max_router.message(text="📊 Статистика сегодня")
 async def show_today_stats(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
@@ -1441,7 +1441,7 @@ async def show_today_stats(message: Any, max_api: MaxApi):
 
 
 # ---------- РЕКОМЕНДАЦИИ ----------
-@max_router.message(command="recommendations")
+@max_router.message(Command("recommendations"))
 @max_router.message(text="💡 Рекомендации ИИ")
 async def show_recommendations(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
@@ -1550,7 +1550,7 @@ async def handle_weight_input(message: Any, max_api: MaxApi):
         )
 
 # ---------- ГРАФИК ПРОГРЕССА ----------
-@max_router.message(command="progress")
+@max_router.message(Command("progress"))
 @max_router.message(text="📈 График прогресса")
 async def show_progress(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
@@ -1690,7 +1690,7 @@ async def handle_notification_time(message: Any, max_api: MaxApi):
 
 
 # ---------- ПРОФИЛЬ ----------
-@max_router.message(command="profile")
+@max_router.message(Command("profile"))
 @max_router.message(text="👤 Мой профиль")
 async def show_profile(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
@@ -1753,7 +1753,7 @@ async def show_profile(message: Any, max_api: MaxApi):
 
 
 # ---------- МОИ ЦЕЛИ ----------
-@max_router.message(command="goals")
+@max_router.message(Command("goals"))
 @max_router.message(text="🎯 Мои цели")
 async def show_goals(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
@@ -2030,7 +2030,7 @@ async def grams_handler(message: Any, max_api: MaxApi):
 
 
 # ---------- ОТМЕНА ----------
-@max_router.message(command="cancel")
+@max_router.message(Command("cancel"))
 async def cancel(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     user_states.pop(user_id, None)
