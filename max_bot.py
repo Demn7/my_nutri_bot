@@ -16,6 +16,7 @@ from typing import Any
 # Импорты для баз данных
 from database import update_visit_counter
 from database import init_db as init_visits_db
+import database
 
 # Минимальный веб-сервер для Render
 web_app = Flask('')
