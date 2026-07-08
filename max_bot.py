@@ -2090,8 +2090,11 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
+    # Создаем экземпляр MaxApi
     bot = await MaxApi(token=token, router=max_router)
-    await bot.start_polling()
+    
+    # Запускаем бота через универсальный метод run()
+    await bot.run()
 
 
 if __name__ == '__main__':
