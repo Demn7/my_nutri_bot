@@ -1138,18 +1138,18 @@ def generate_local_recommendations(user_data, nutrition_data):
     return result  # ВАЖНО: возвращаем результат!
 
 # ======================== АДМИН-СТАТИСТИКА (MAX) ========================
-@max_router.message(Command("admin_stats"))
-@max_router.message()
-async def admin_stats(message: Any, max_api: MaxApi):
+@dp.message_created(Command("admin_stats"))
+@dp.message_created()
+async def admin_stats(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
-    if message.text != "📊 Статистика администратора":
+    if event.message.body.text != "📊 Статистика администратора":
         return
     """Команда для просмотра статистики посещений (только для админа)"""
     ADMIN_ID = 5199340101  # ЗАМЕНИТЕ НА СВОЙ TELEGRAM ID!
 
-    if message.from_user.id != ADMIN_ID:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+    if event.message.from_user.id != ADMIN_ID:
+        await bot.event.message.answer(
+            chat_id=event.message.from_user.id,
             text="❌ У вас нет прав для просмотра этой статистики."
         )
         return
@@ -1171,120 +1171,120 @@ async def admin_stats(message: Any, max_api: MaxApi):
         name = first_name or username or f"ID:{user_id}"
         response += f"{i}. {name} — {visits} визитов\n"
 
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.message.from_user.id,
         text=response
     )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 1: ПОЛ) ========================
-async def gender_step(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
-    text = message.text
+async def gender_step(event: MessageCreated):
+    user_id = event.message.from_user.id
+    text = event.message.body.text
 
     if text not in ['👨 Мужской', '👩 Женский']:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Пожалуйста, выберите пол из предложенных вариантов:',
             reply_markup=[['👨 Мужской', '👩 Женский']]
         )
         return
 
     user_data_registry[user_id] = {'gender': text}
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.message.from_user.id,
         text='Сколько тебе лет?'
     )
     user_states[user_id] = 'age'
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 2: ВОЗРАСТ) ========================
-async def age_step(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+async def age_step(event: MessageCreated):
+    user_id = event.message.from_user.id
     if user_states.get(user_id) != 'age':
         return
 
     try:
-        age_val = int(message.text)
+        age_val = int(event.message.body.text)
         if age_val < 10 or age_val > 100:
-            await max_api.send_message(
-                chat_id=message.from_user.id,
+            await bot.send_message(
+                chat_id=event.message.from_user.id,
                 text='Пожалуйста, введите реальный возраст (10-100 лет):'
             )
             return
         user_data_registry[user_id]['age'] = age_val
         user_states[user_id] = 'height'
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Какой у тебя рост (в см)?'
         )
     except ValueError:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.messag.from_user.id,
             text='Пожалуйста, введи число.'
         )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 3: РОСТ) ========================
-async def height_step(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+async def height_step(event: MessageCreate):
+    user_id = event.message.from_user.id
     if user_states.get(user_id) != 'height':
         return
 
     try:
-        height_val = int(message.text)
+        height_val = int(event.message.body.tex)
         if height_val < 100 or height_val > 250:
-            await max_api.send_message(
-                chat_id=message.from_user.id,
+            await bot.send_message(
+                chat_id=event.message.from_user.id,
                 text='Пожалуйста, введите реальный рост (100-250 см):'
             )
             return
         user_data_registry[user_id]['height'] = height_val
         user_states[user_id] = 'weight'
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Сколько ты весишь (в кг)?'
         )
     except ValueError:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Пожалуйста, введи число.'
         )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 4: ВЕС) ========================
-async def weight_step(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+async def weight_step(event: MessageCreate):
+    user_id = event.message.from_user.id
     if user_states.get(user_id) != 'weight':
         return
 
     try:
         weight_val = float(message.text)
         if weight_val < 30 or weight_val > 300:
-            await max_api.send_message(
-                chat_id=message.from_user.id,
+            await bot.send_message(
+                chat_id=event.message.from_user.id,
                 text='Пожалуйста, введите реальный вес (30-300 кг):'
             )
             return
         user_data_registry[user_id]['weight'] = weight_val
         user_states[user_id] = 'goal'
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Какова твоя цель?',
             reply_markup=[['Похудение', 'Поддержание'], ['Набор массы']]
         )
     except ValueError:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Пожалуйста, введи число.'
         )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 5: ЦЕЛЬ) ========================
-async def goal_step(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+async def goal_step(event: MessageCreate):
+    user_id = event.message.from_user.id
     if user_states.get(user_id) != 'goal':
         return
 
-    text = message.text
+    text = event.message.body.text
     if text not in ['Похудение', 'Поддержание', 'Набор массы']:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Пожалуйста, выберите цель из предложенных:',
             reply_markup=[['Похудение', 'Поддержание'], ['Набор массы']]
         )
@@ -1293,22 +1293,22 @@ async def goal_step(message: Any, max_api: MaxApi):
     goal_map = {'Похудение': 'loss', 'Поддержание': 'maintain', 'Набор массы': 'gain'}
     user_data_registry[user_id]['goal'] = goal_map.get(text, 'maintain')
     user_states[user_id] = 'activity'
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.message.from_user.id,
         text='Какой у тебя уровень активности?',
         reply_markup=[['Сидячий', 'Легкая'], ['Умеренная', 'Высокая']]
     )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 6: АКТИВНОСТЬ) ========================
-async def activity_step(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
-    if user_states.get(user_id) != 'activity':
+async def activity_step(event: MessageCreate):
+    user_id = event.messag.from_user.id
+    if user_states.gete(user_id) != 'activity':
         return
 
-    text = message.text
+    text = event.message.body.text
     if text not in ['Сидячий', 'Легкая', 'Умеренная', 'Высокая']:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.messag.from_user.id,
             text='Пожалуйста, выберите уровень активности из предложенных:',
             reply_markup=[['Сидячий', 'Легкая'], ['Умеренная', 'Высокая']]
         )
@@ -1327,8 +1327,8 @@ async def activity_step(message: Any, max_api: MaxApi):
     goal = user_data.get('goal')
 
     if not all([gender, weight, height, age, goal]):
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.messag.from_user.id,
             text='❌ Ошибка: не все данные заполнены. Начните регистрацию заново с /start'
         )
         user_states.pop(user_id, None)
@@ -1363,8 +1363,8 @@ async def activity_step(message: Any, max_api: MaxApi):
     user_states.pop(user_id, None)
     user_data_registry.pop(user_id, None)
 
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.message.from_user.id,
         text=(
             f'🎉 Регистрация завершена!\n\n'
             f'📊 Ваша дневная норма:\n'
