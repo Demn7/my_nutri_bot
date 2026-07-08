@@ -10,10 +10,10 @@ import threading
 import asyncio
 from datetime import time, timedelta
 from flask import Flask
-from pyromax import Router, Client
-from pyromax.filters import Command
-from typing import Any
-# Импорты для баз данных
+from maxapi import Bot, Dispatcher
+from maxapi.filters import CommandStart, Command
+from maxapi.types import MessageCreated
+
 from database import update_visit_counter
 from database import init_db as init_visits_db
 import database
@@ -43,7 +43,7 @@ DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', "sk-your-deepseek-api-key-here"
 MAX_BOT_TOKEN = os.getenv('MAX_BOT_TOKEN')   # Токен будет браться из настроек Bothost.ru
 
 if not MAX_BOT_TOKEN:
-    raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения на Bothost.ru")
+    raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения")
 
 # ======================== ГЛОБАЛЬНЫЕ СЛОВАРИ ДЛЯ СОСТОЯНИЙ ========================
 user_states = {}          # Хранит текущее состояние пользователя
@@ -193,18 +193,19 @@ async def track_activity(user_id: int, action: str):
     conn.commit()
     conn.close()
 # ======================== РОУТЕР MAX ========================
-max_router = Router()
+dp = Dispatcher()
 
 # ---------- СТАРТ ----------
-@max_router.message(Command("start"))
-async def start_command(message: Any, max_api: MaxApi):
-    user = message.from_user
-    visit_count = update_visit_counter(  # без database.
+@dp.message_created(CommandStart())
+async def start_command(event: MessageCreated):
+    user = event.message.from_user
+    visit_count = update_visit_counter(
         user_id=user.id,
         username=user.username,
         first_name=user.first_name,
         last_name=user.last_name
     )
+
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -213,40 +214,33 @@ async def start_command(message: Any, max_api: MaxApi):
     conn.close()
 
     if existing_user:
-        await max_api.send_message(
-            chat_id=user.id,
-            text=(
-                f"🍎 С возвращением, {user.first_name}!\n"
-                f"🌟 Это ваш {visit_count}-й визит в бота!"
-            ),
+        await event.message.answer(
+            f"🍎 С возвращением, {user.first_name}!\n"
+            f"🌟 Это ваш {visit_count}-й визит в бота!",
             reply_markup=main_menu_keyboard()
         )
     else:
-        await max_api.send_message(
-            chat_id=user.id,
-            text=(
-                f"🍏 Привет, {user.first_name}!\n\n"
-                "Я - твой персональный нутрициолог! 🌟\n"
-                "Это твой первый визит в бота!\n\n"
-                "Помогу тебе:\n"
-                "• 📊 Следить за питанием и калориями\n"
-                "• 🎯 Достигать целей по весу\n"
-                "• 💪 Контролировать белки, жиры, углеводы\n"
-                "• 🧠 Получать умные рекомендации\n\n"
-                "Давай создадим твой персональный план! 🚀"
-            )
+        await event.message.answer(
+            f"🍏 Привет, {user.first_name}!\n\n"
+            "Я - твой персональный нутрициолог! 🌟\n"
+            "Это твой первый визит в бота!\n\n"
+            "Помогу тебе:\n"
+            "• 📊 Следить за питанием и калориями\n"
+            "• 🎯 Достигать целей по весу\n"
+            "• 💪 Контролировать белки, жиры, углеводы\n"
+            "• 🧠 Получать умные рекомендации\n\n"
+            "Давай создадим твой персональный план! 🚀"
         )
-        await max_api.send_message(
-            chat_id=user.id,
-            text='Для начала скажи, какой у тебя пол?',
+        await event.message.answer(
+            'Для начала скажи, какой у тебя пол?',
             reply_markup=[['👨 Мужской', '👩 Женский']]
         )
         user_states[user.id] = 'gender'
 
 # ---------- HELP ----------
-@max_router.message(Command("help"))
-async def help_command(message: Any, max_api: MaxApi):
-    await max_api.send_message(
+@dp.message_created(Command("help"))
+async def help_command(event: MessageCreated):
+    await event.message.answer(
         chat_id=message.from_user.id,
         text=(
             "/start — начать\n"
