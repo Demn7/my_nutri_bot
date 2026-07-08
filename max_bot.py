@@ -2089,8 +2089,8 @@ async def main():
     print("✅ Нажмите Ctrl+C для остановки")
 
     # Правильный способ для pyromax 0.7.7
-    bot = MaxApi(token=token, router=max_router)
-    await bot.start_polling()
+    bot = await MaxApi.create(token=token)
+    await bot.start_polling(router=max_router)
 
 
 if __name__ == '__main__':
