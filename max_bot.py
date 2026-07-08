@@ -10,7 +10,7 @@ import threading
 import asyncio
 from datetime import time, timedelta
 from flask import Flask
-from pyromax import Router, MaxApi
+from pyromax import Router, Client
 from pyromax.filters import Command
 from typing import Any
 # Импорты для баз данных
@@ -2090,14 +2090,8 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
-    # Создаем экземпляр MaxApi
-    bot = MaxApi(token=token)
-    
-    # Регистрируем роутер
-    bot.include_router(max_router)
-    
-    # Запускаем бота
-    await bot.start()
+    client = Client(token=token, router=max_router)  # ✅ СТАЛО
+    await client.run()                               # ✅ СТАЛО
 
 
 if __name__ == '__main__':
