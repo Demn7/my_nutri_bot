@@ -2075,11 +2075,13 @@ async def cancel(message: Any, max_api: MaxApi):
 
 
 # ======================== ЗАПУСК БОТА MAX ========================
+
 async def main():
-    # Инициализируем обе базы данных
-    init_visits_db()
-    init_db()
-    
+    # Выполняем синхронные функции инициализации БД в отдельном потоке, 
+    # чтобы не блокировать асинхронный цикл.
+    await asyncio.to_thread(init_visits_db)  # для счётчика
+    await asyncio.to_thread(init_db)        # для основных данных
+
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
         raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения")
@@ -2088,7 +2090,6 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
-    # Правильный способ для pyromax 0.7.7
     bot = await MaxApi.create(token=token)
     await bot.start_polling(router=max_router)
 
