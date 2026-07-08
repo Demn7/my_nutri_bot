@@ -2091,10 +2091,13 @@ async def main():
     print("✅ Нажмите Ctrl+C для остановки")
 
     # Создаем экземпляр MaxApi
-    bot = await MaxApi(token=token, router=max_router)
+    bot = MaxApi(token=token)
     
-    # Запускаем бота через универсальный метод run()
-    await bot.run()
+    # Регистрируем роутер
+    bot.include_router(max_router)
+    
+    # Запускаем бота
+    await bot.start()
 
 
 if __name__ == '__main__':
