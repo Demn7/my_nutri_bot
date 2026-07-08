@@ -1378,8 +1378,8 @@ async def activity_step(event: MessageCreate):
     )
 
 # ---------- СТАТИСТИКА СЕГОДНЯ ----------
-@max_router.message(Command("stats"))
-@max_router.message()
+@dp.message_created(Command("stats"))
+@dp.message_created()
 async def show_today_stats(message: Any, max_api: MaxApi):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "📊 Статистика сегодня":
