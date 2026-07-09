@@ -1774,12 +1774,12 @@ async def show_profile(event: MessageCreated):
 
 # ---------- МОИ ЦЕЛИ ----------
 @dp.message_created(Command("goals"))
-@dp.message_created(event: MessageCreated)
-async def show_goals():
+@dp.message_created()
+async def show_goals(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
-    if message.text != "🎯 Мои цели":
+    if event.message.body.text != "🎯 Мои цели":
         return
-    user_id = message.from_user.id
+    user_id = event.message.from_user.id
     await track_activity(user_id, 'command')
 
     conn = get_db_connection()
@@ -1789,8 +1789,8 @@ async def show_goals():
     conn.close()
 
     if not user_data:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Сначала завершите регистрацию через /start'
         )
         return
@@ -1813,82 +1813,82 @@ async def show_goals():
         f"• Углеводы: {(user_data['daily_calories'] - user_data['weight'] * 1.5 * 4 - user_data['weight'] * 0.8 * 9) / 4:.0f}г"
     )
     await max_api.send_message(
-        chat_id=message.from_user.id,
+        chat_id=event.message.from_user.id,
         text=response
     )
 
 
 # ---------- ОБРАБОТЧИК ГЛАВНОГО МЕНЮ ----------
 @dp.message_created()
-async def handle_main_menu(message: Any, max_api: MaxApi):
+async def handle_main_menu(event: MessageCreated):
     # 1. Получаем ID пользователя
-    user_id = message.from_user.id
+    user_id = event.message.from_user.id
 
     # 2. Получаем текущее состояние пользователя
     state = user_states.get(user_id)
 
     # 3. Получаем текст сообщения
-    text = message.text
+    text = event.message.body.text
 
     # 4. Если пользователь в процессе регистрации — направляем в нужный шаг
     if state == 'gender':
-        await gender_step(message, max_api)
+        await gender_step(event, bot)
         return
     elif state == 'age':
-        await age_step(message, max_api)
+        await age_step(event, bot)
         return
     elif state == 'height':
-        await height_step(message, max_api)
+        await height_step(event, bot)
         return
     elif state == 'weight':
-        await weight_step(message, max_api)
+        await weight_step(event, bot)
         return
     elif state == 'goal':
-        await goal_step(message, max_api)
+        await goal_step(event, bot)
         return
     elif state == 'activity':
-        await activity_step(message, max_api)
+        await activity_step(event, bot)
         return
     elif state == 'meal_type':
-        await meal_type_handler(message, max_api)
+        await meal_type_handlerevent()
         return
     elif state == 'product_name':
-        await product_name_handler(message, max_api)
+        await product_name_handler(event, bot)
         return
     elif state == 'grams':
-        await grams_handler(message, max_api)
+        await grams_handler(event, bot)
         return
     elif state == 'weight_input':
-        await handle_weight_input(message, max_api)
+        await handle_weight_input(event, bot)
         return
     elif state == 'notification':
-        await handle_notification_time(message, max_api)
+        await handle_notification_time(event, bot)
         return
 
     # 5. Если пользователь не в специальном состоянии — обрабатываем кнопки меню
     await track_activity(user_id, 'command')
 
     if text == '🍽 Ввести прием пищи':
-        await start_meal_input(message, max_api)
+        await start_meal_input(event, bot)
     elif text == '📊 Статистика сегодня':
-        await show_today_stats(message, max_api)
+        await show_today_stats(event, bot)
     elif text == '⚖️ Ввести вес':
-        await weight_tracking_cmd(message, max_api)
+        await weight_tracking_cmd(event, bot)
     elif text == '📈 График прогресса':
-        await show_progress(message, max_api)
+        await show_progress(event, bot)
     elif text == '💡 Рекомендации ИИ':
-        await show_recommendations(message, max_api)
+        await show_recommendations(event, bot)
     elif text == '🎯 Мои цели':
-        await show_goals(message, max_api)
+        await show_goals(event, bot)
     elif text == '👤 Мой профиль':
-        await show_profile(message, max_api)
+        await show_profile(event, bot)
     elif text == '⚙️ Настройки':
-        await notification_settings(message, max_api)
+        await notification_settings(event, bot)
     elif text == '📤 Экспорт данных':
-        await export_data(message, max_api)
+        await export_data(event, bot)
     else:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Используйте кнопки меню для навигации',
             reply_markup=main_menu_keyboard()
         )
@@ -1896,62 +1896,62 @@ async def handle_main_menu(message: Any, max_api: MaxApi):
 
 # ---------- ВВОД ПРИЕМА ПИЩИ ----------
 @dp.message_created()
-async def start_meal_input(message: Any, max_api: MaxApi):
+async def start_meal_input(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
-    if message.text != "🍽 Ввести прием пищи":
+    if event.message.body.text != "🍽 Ввести прием пищи":
         return
-    user_id = message.from_user.id
+    user_id = event.message.from_user.id
     user_states[user_id] = 'meal_type'
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.message.from_user.id,
         text='Выберите прием пищи:',
         reply_markup=[['Завтрак', 'Обед'], ['Ужин', 'Перекус']]
     )
 
 
 @dp.message_created()
-async def meal_type_handler(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+async def meal_type_handler(event: MessageCreated):
+    user_id = event.message.from_user.id
     if user_states.get(user_id) != 'meal_type':
         return
 
-    meal_type = message.text
+    meal_type = event.message.body.text
     if meal_type not in ['Завтрак', 'Обед', 'Ужин', 'Перекус']:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id= event.message.from_user.id,
             text='Пожалуйста, выберите из предложенных вариантов.'
         )
         return
 
     user_meal_data[user_id] = {'meal_type': meal_type}
     user_states[user_id] = 'product_name'
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await  bot.send_message(
+        chat_id=event.message.from_user.id,
         text='Что ты съел(а)? Укажи продукт:'
     )
 
 
 @dp.message_created()
-async def product_name_handler(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+async def product_name_handler(event: MessageCreated):
+    user_id = event.message.from_user.id
     if user_states.get(user_id) != 'product_name':
         return
 
-    if message.text.lower() in ['завершить', 'готово', 'стоп', 'конец', 'отмена']:
+    if event.message.body.text.lower() in ['завершить', 'готово', 'стоп', 'конец', 'отмена']:
         user_states.pop(user_id, None)
         user_meal_data.pop(user_id, None)
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='✅ Ввод приема пищи завершен!',
             reply_markup=main_menu_keyboard()
         )
         return
 
-    product_name = message.text
+    product_name = event.message.body.text
     user_meal_data[user_id]['product_name'] = product_name
 
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.message.from_user.id,
         text="🔍 Ищу информацию о продукте..."
     )
     product = await search_product_api(product_name)
@@ -1959,8 +1959,8 @@ async def product_name_handler(message: Any, max_api: MaxApi):
     if product:
         user_meal_data[user_id]['product'] = product
         user_states[user_id] = 'grams'
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text=(
                 f"✅ Найдено: {product['name']}\n"
                 f"💡 100г содержит: {product['calories']} ккал\n\n"
@@ -1968,30 +1968,31 @@ async def product_name_handler(message: Any, max_api: MaxApi):
             )
         )
     else:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='❌ Продукт не найден. Попробуй другой продукт:'
         )
 
 
 @dp.message_created()
-async def grams_handler(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+async def grams_handler(event: MessageCreated):
+    user_id =event.message.from_user.id
     if user_states.get(user_id) != 'grams':
         return
 
-    if message.text.lower() in ['завершить', 'готово', 'стоп', 'конец', 'отмена']:
+    if event.message.body.text.lower() in ['завершить', 'готово', 'стоп', 'конец', 'отмена']:
         user_states.pop(user_id, None)
         user_meal_data.pop(user_id, None)
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='✅ Ввод приема пищи завершен!',
             reply_markup=main_menu_keyboard()
         )
         return
 
     try:
-        grams = float(message.text)
+        grams = float(event.message.body.text
+                     )
         if grams <= 0 or grams > 5000:
             await max_api.send_message(
                 chat_id=message.from_user.id,
@@ -2057,7 +2058,7 @@ async def grams_handler(message: Any, max_api: MaxApi):
 
 # ---------- ОТМЕНА ----------
 @dp.message_created(Command("cancel"))
-async def cancel(message: Any, max_api: MaxApi):
+async def cancel(event: MessageCreated):
     user_id = message.from_user.id
     user_states.pop(user_id, None)
     user_meal_data.pop(user_id, None)
