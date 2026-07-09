@@ -1994,8 +1994,8 @@ async def grams_handler(event: MessageCreated):
         grams = float(event.message.body.text
                      )
         if grams <= 0 or grams > 5000:
-            await max_api.send_message(
-                chat_id=message.from_user.id,
+            await bot.send_message(
+                chat_id=event.message.from_user.id,
                 text='Пожалуйста, введите реальное количество грамм (1-5000):'
             )
             return
@@ -2003,8 +2003,8 @@ async def grams_handler(event: MessageCreated):
         meal_data = user_meal_data.get(user_id, {})
         product = meal_data.get('product')
         if not product:
-            await max_api.send_message(
-                chat_id=message.from_user.id,
+            await bot.send_message(
+                chat_id=event.message.from_user.id,
                 text='❌ Ошибка: продукт не найден. Начните заново.'
             )
             user_states.pop(user_id, None)
@@ -2034,8 +2034,8 @@ async def grams_handler(event: MessageCreated):
         user_states.pop(user_id, None)
         user_meal_data.pop(user_id, None)
 
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text=(
                 f'✅ Успешно добавлено!\n\n'
                 f'🍽 {meal_type}: {product_name} - {grams}г\n'
@@ -2050,20 +2050,22 @@ async def grams_handler(event: MessageCreated):
         )
 
     except ValueError:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.message.from_user.id,
             text='Пожалуйста, введи число:'
         )
 
 
 # ---------- ОТМЕНА ----------
 @dp.message_created(Command("cancel"))
-async def cancel(event: MessageCreated):
-    user_id = message.from_user.id
+async def cancel(event:MessageCreated, bot:Bot)
+    await bot.delete_webhook()
+    await dp.start_polling(bot)):
+    user_id = event.message.from_user.id
     user_states.pop(user_id, None)
     user_meal_data.pop(user_id, None)
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.message.from_user.id,
         text='❌ Операция отменена.',
         reply_markup=main_menu_keyboard()
     )
@@ -2074,8 +2076,8 @@ async def cancel(event: MessageCreated):
 async def main():
     # Выполняем синхронные функции инициализации БД в отдельном потоке, 
     # чтобы не блокировать асинхронный цикл.
-    await asyncio.to_thread(init_visits_db)  # для счётчика
-    await asyncio.to_thread(init_db)        # для основных данных
+       init_db()
+       database.init_db()      # для основных данных
 
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
@@ -2085,8 +2087,9 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
-    client = Client(token=token, router=max_router)  # ✅ СТАЛО
-    await client.run()                               # ✅ СТАЛО
+       bot = Bot(token=token)
+    await bot.delete_webhook()
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
