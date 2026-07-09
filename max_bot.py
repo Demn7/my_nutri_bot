@@ -1364,7 +1364,7 @@ async def activity_step(event: MessageCreate):
     user_data_registry.pop(user_id, None)
 
     await bot.send_message(
-        chat_id=event.message.from_user.id,
+        chat_id=event.mesesag.from_user.id,
         text=(
             f'🎉 Регистрация завершена!\n\n'
             f'📊 Ваша дневная норма:\n'
@@ -1380,11 +1380,11 @@ async def activity_step(event: MessageCreate):
 # ---------- СТАТИСТИКА СЕГОДНЯ ----------
 @dp.message_created(Command("stats"))
 @dp.message_created()
-async def show_today_stats(message: Any, max_api: MaxApi):
+async def show_today_stats(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
-    if message.text != "📊 Статистика сегодня":
+    if event.message.body.text != "📊 Статистика сегодня":
         return
-    user_id = message.from_user.id
+    user_id = event.mesesag.from_user.id
     await track_activity(user_id, 'command')
     today = datetime.date.today().isoformat()
 
@@ -1393,8 +1393,8 @@ async def show_today_stats(message: Any, max_api: MaxApi):
     cur.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
     user_data = cur.fetchone()
     if not user_data:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id= event.mesesag.from_user.id,
             text='Сначала завершите регистрацию через /start'
         )
         conn.close()
@@ -1431,25 +1431,25 @@ async def show_today_stats(message: Any, max_api: MaxApi):
         response += "🍽 Приемы пищи сегодня:\n"
         for meal in meals:
             response += f"• {meal['meal_type']}: {meal['product_name']} - {meal['grams']}г ({meal['calories']:.0f} ккал)\n"
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text=response
         )
     else:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text="Сегодня еще не было введено приемов пищи."
         )
 
 
 # ---------- РЕКОМЕНДАЦИИ ----------
-@max_router.message(Command("recommendations"))
-@max_router.message()
-async def show_recommendations(message: Any, max_api: MaxApi):
+@dp.message_created(Command("recommendations"))
+@dp.message_created()
+async def show_recommendations(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
-    if message.text != "💡 Рекомендации ИИ":
+    if event.message.body.text != "💡 Рекомендации ИИ":
         return
-    user_id = message.from_user.id
+    user_id = event.mesesag.from_user.id
     await track_activity(user_id, 'command')
     today = datetime.date.today().isoformat()
 
@@ -1458,8 +1458,8 @@ async def show_recommendations(message: Any, max_api: MaxApi):
     cur.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
     user_data = cur.fetchone()
     if not user_data:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text='Сначала завершите регистрацию через /start'
         )
         conn.close()
@@ -1475,27 +1475,27 @@ async def show_recommendations(message: Any, max_api: MaxApi):
     conn.close()
 
     if not totals['calories'] or totals['calories'] is None:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text="📝 Сегодня еще нет данных о питании.\nВведите прием пищи чтобы получить персональные рекомендации."
         )
         return
 
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.mesesag.from_user.id,
         text="🧠 Анализирую ваше питание..."
     )
 
     try:
         local_recommendations = generate_local_recommendations(dict(user_data), dict(totals))
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text=f"💡 Персональные рекомендации:\n\n{local_recommendations}"
         )
     except Exception as e:
         logger.error(f"Ошибка генерации рекомендаций: {e}")
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text=(
                 "📊 На основе ваших данных:\n\n"
                 f"• Съедено калорий: {totals['calories']:.0f} из {user_data['daily_calories']}\n"
