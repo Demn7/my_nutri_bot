@@ -1508,30 +1508,30 @@ async def show_recommendations(event: MessageCreated):
 
 
 # ---------- ВВОД ВЕСА ----------
-@max_router.message()
-async def weight_tracking_cmd(message: Any, max_api: MaxApi):
+@dp.message_created()
+async def weight_tracking_cmd(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
-    if message.text != "⚖️ Ввести вес":
+    if event.message.body.text != "⚖️ Ввести вес":
         return
-    user_id = message.from_user.id
+    user_id = event.mesesag.from_user.id
     user_states[user_id] = 'weight_input'
-    await max_api.send_message(
-        chat_id=message.from_user.id,
+    await bot.send_message(
+        chat_id=event.mesesag.from_user.id,
         text='Введите ваш текущий вес (в кг):'
     )
 
 
-@max_router.message()
-async def handle_weight_input(message: Any, max_api: MaxApi):
-    user_id = message.from_user.id
+@dp.message_created()
+async def handle_weight_input(event: MessageCreated):
+    user_id = event.mesesag.from_user.id
     if user_states.get(user_id) != 'weight_input':
         return
 
     try:
         weight_val = float(message.text)
         if weight_val < 30 or weight_val > 300:
-            await max_api.send_message(
-                chat_id=message.from_user.id,
+            await bot.send_message(
+                chat_id=event.mesesag.from_user.id,
                 text='Пожалуйста, введите реальный вес (30-300 кг):'
             )
             return
@@ -1545,22 +1545,22 @@ async def handle_weight_input(message: Any, max_api: MaxApi):
 
         await track_activity(user_id, 'weight')
         user_states.pop(user_id, None)
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text=f'✅ Вес {weight_val} кг сохранен!',
             reply_markup=main_menu_keyboard()
         )
 
     except ValueError:
-        await max_api.send_message(
-            chat_id=message.from_user.id,
+        await  bot.send_message(
+            chat_id=event.mesesag.from_user.id,
             text='Пожалуйста, введите число:'
         )
 
 # ---------- ГРАФИК ПРОГРЕССА ----------
-@max_router.message(Command("progress"))
-@max_router.message()
-async def show_progress(message: Any, max_api: MaxApi):
+@dp.message_created(Command("progress"))
+@dp.message_created()
+async def show_progress(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "📈 График прогресса":
         return
@@ -1606,8 +1606,8 @@ async def show_progress(message: Any, max_api: MaxApi):
 
 
 # ---------- ЭКСПОРТ ДАННЫХ ----------
-@max_router.message()
-async def export_data(message: Any, max_api: MaxApi):
+@dp.message_created()
+async def export_data(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "📤 Экспорт данных":
         return
@@ -1659,8 +1659,8 @@ async def export_data(message: Any, max_api: MaxApi):
     
 
 # ---------- НАСТРОЙКА УВЕДОМЛЕНИЙ ----------
-@max_router.message()
-async def notification_settings(message: Any, max_api: MaxApi):
+@dp.message_created()
+async def notification_settings(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "⚙️ Настройки":
         return
@@ -1672,8 +1672,8 @@ async def notification_settings(message: Any, max_api: MaxApi):
         reply_markup=[['09:00', '12:00'], ['18:00', 'Выключить']]
     )
 
-@max_router.message()
-async def handle_notification_time(message: Any, max_api: MaxApi):
+@dp.message_created()
+async def handle_notification_time(event: MessageCreated):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'notification':
         return
@@ -1707,9 +1707,9 @@ async def handle_notification_time(message: Any, max_api: MaxApi):
 
 
 # ---------- ПРОФИЛЬ ----------
-@max_router.message(Command("profile"))
-@max_router.message()
-async def show_profile(message: Any, max_api: MaxApi):
+@dp.message_created(Command("profile"))
+@dp.message_created()
+async def show_profile(event: MessageCreated):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "👤 Мой профиль":
         return
@@ -1773,9 +1773,9 @@ async def show_profile(message: Any, max_api: MaxApi):
 
 
 # ---------- МОИ ЦЕЛИ ----------
-@max_router.message(Command("goals"))
-@max_router.message()
-async def show_goals(message: Any, max_api: MaxApi):
+@dp.message_created(Command("goals"))
+@dp.message_created(event: MessageCreated)
+async def show_goals():
      # Проверяем, что сообщение — это нужный текст
     if message.text != "🎯 Мои цели":
         return
@@ -1819,7 +1819,7 @@ async def show_goals(message: Any, max_api: MaxApi):
 
 
 # ---------- ОБРАБОТЧИК ГЛАВНОГО МЕНЮ ----------
-@max_router.message()
+@dp.message_created()
 async def handle_main_menu(message: Any, max_api: MaxApi):
     # 1. Получаем ID пользователя
     user_id = message.from_user.id
@@ -1895,7 +1895,7 @@ async def handle_main_menu(message: Any, max_api: MaxApi):
 
 
 # ---------- ВВОД ПРИЕМА ПИЩИ ----------
-@max_router.message()
+@dp.message_created()
 async def start_meal_input(message: Any, max_api: MaxApi):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "🍽 Ввести прием пищи":
@@ -1909,7 +1909,7 @@ async def start_meal_input(message: Any, max_api: MaxApi):
     )
 
 
-@max_router.message()
+@dp.message_created()
 async def meal_type_handler(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'meal_type':
@@ -1931,7 +1931,7 @@ async def meal_type_handler(message: Any, max_api: MaxApi):
     )
 
 
-@max_router.message()
+@dp.message_created()
 async def product_name_handler(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'product_name':
@@ -1974,7 +1974,7 @@ async def product_name_handler(message: Any, max_api: MaxApi):
         )
 
 
-@max_router.message()
+@dp.message_created()
 async def grams_handler(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'grams':
@@ -2056,7 +2056,7 @@ async def grams_handler(message: Any, max_api: MaxApi):
 
 
 # ---------- ОТМЕНА ----------
-@max_router.message(Command("cancel"))
+@dp.message_created(Command("cancel"))
 async def cancel(message: Any, max_api: MaxApi):
     user_id = message.from_user.id
     user_states.pop(user_id, None)
