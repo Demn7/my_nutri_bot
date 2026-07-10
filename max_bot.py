@@ -197,7 +197,7 @@ dp = Dispatcher()
 
 # ---------- СТАРТ ----------
 @dp.message_created(CommandStart())
-async def start_command(event: MessageCreated):
+async def start_command(event: MessageCreated,bot: Bot):
     user = event.message.from_user
     visit_count = update_visit_counter(
         user_id=user.id,
@@ -239,7 +239,7 @@ async def start_command(event: MessageCreated):
 
 # ---------- HELP ----------
 @dp.message_created(Command("help"))
-async def help_command(event: MessageCreated):
+async def help_command(event: MessageCreated,bot: Bot):
     await event.message.answer(
         chat_id=message.from_user.id,
         text=(
@@ -1140,7 +1140,7 @@ def generate_local_recommendations(user_data, nutrition_data):
 # ======================== АДМИН-СТАТИСТИКА (MAX) ========================
 @dp.message_created(Command("admin_stats"))
 @dp.message_created()
-async def admin_stats(event: MessageCreated):
+async def admin_stats(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if event.message.body.text != "📊 Статистика администратора":
         return
@@ -1177,7 +1177,7 @@ async def admin_stats(event: MessageCreated):
     )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 1: ПОЛ) ========================
-async def gender_step(event: MessageCreated):
+async def gender_step(event: MessageCreated,bot: Bot):
     user_id = event.message.from_user.id
     text = event.message.body.text
 
@@ -1197,7 +1197,7 @@ async def gender_step(event: MessageCreated):
     user_states[user_id] = 'age'
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 2: ВОЗРАСТ) ========================
-async def age_step(event: MessageCreated):
+async def age_step(event: MessageCreated,bot: Bot):
     user_id = event.message.from_user.id
     if user_states.get(user_id) != 'age':
         return
@@ -1223,7 +1223,7 @@ async def age_step(event: MessageCreated):
         )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 3: РОСТ) ========================
-async def height_step(event: MessageCreate):
+async def height_step(event: MessageCreate,bot: Bot):
     user_id = event.message.from_user.id
     if user_states.get(user_id) != 'height':
         return
@@ -1249,7 +1249,7 @@ async def height_step(event: MessageCreate):
         )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 4: ВЕС) ========================
-async def weight_step(event: MessageCreate):
+async def weight_step(event: MessageCreate,bot: Bot):
     user_id = event.message.from_user.id
     if user_states.get(user_id) != 'weight':
         return
@@ -1276,7 +1276,7 @@ async def weight_step(event: MessageCreate):
         )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 5: ЦЕЛЬ) ========================
-async def goal_step(event: MessageCreate):
+async def goal_step(event: MessageCreate,bot: Bot):
     user_id = event.message.from_user.id
     if user_states.get(user_id) != 'goal':
         return
@@ -1300,7 +1300,7 @@ async def goal_step(event: MessageCreate):
     )
 
 # ======================== РЕГИСТРАЦИЯ (ШАГ 6: АКТИВНОСТЬ) ========================
-async def activity_step(event: MessageCreate):
+async def activity_step(event: MessageCreate,bot: Bot):
     user_id = event.messag.from_user.id
     if user_states.gete(user_id) != 'activity':
         return
@@ -1380,7 +1380,7 @@ async def activity_step(event: MessageCreate):
 # ---------- СТАТИСТИКА СЕГОДНЯ ----------
 @dp.message_created(Command("stats"))
 @dp.message_created()
-async def show_today_stats(event: MessageCreated):
+async def show_today_stats(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if event.message.body.text != "📊 Статистика сегодня":
         return
@@ -1445,7 +1445,7 @@ async def show_today_stats(event: MessageCreated):
 # ---------- РЕКОМЕНДАЦИИ ----------
 @dp.message_created(Command("recommendations"))
 @dp.message_created()
-async def show_recommendations(event: MessageCreated):
+async def show_recommendations(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if event.message.body.text != "💡 Рекомендации ИИ":
         return
@@ -1509,7 +1509,7 @@ async def show_recommendations(event: MessageCreated):
 
 # ---------- ВВОД ВЕСА ----------
 @dp.message_created()
-async def weight_tracking_cmd(event: MessageCreated):
+async def weight_tracking_cmd(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if event.message.body.text != "⚖️ Ввести вес":
         return
@@ -1522,7 +1522,7 @@ async def weight_tracking_cmd(event: MessageCreated):
 
 
 @dp.message_created()
-async def handle_weight_input(event: MessageCreated):
+async def handle_weight_input(event: MessageCreated,bot: Bot):
     user_id = event.mesesag.from_user.id
     if user_states.get(user_id) != 'weight_input':
         return
@@ -1560,7 +1560,7 @@ async def handle_weight_input(event: MessageCreated):
 # ---------- ГРАФИК ПРОГРЕССА ----------
 @dp.message_created(Command("progress"))
 @dp.message_created()
-async def show_progress(event: MessageCreated):
+async def show_progress(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "📈 График прогресса":
         return
@@ -1607,7 +1607,7 @@ async def show_progress(event: MessageCreated):
 
 # ---------- ЭКСПОРТ ДАННЫХ ----------
 @dp.message_created()
-async def export_data(event: MessageCreated):
+async def export_data(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "📤 Экспорт данных":
         return
@@ -1660,7 +1660,7 @@ async def export_data(event: MessageCreated):
 
 # ---------- НАСТРОЙКА УВЕДОМЛЕНИЙ ----------
 @dp.message_created()
-async def notification_settings(event: MessageCreated):
+async def notification_settings(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "⚙️ Настройки":
         return
@@ -1673,7 +1673,7 @@ async def notification_settings(event: MessageCreated):
     )
 
 @dp.message_created()
-async def handle_notification_time(event: MessageCreated):
+async def handle_notification_time(event: MessageCreated,bot: Bot):
     user_id = message.from_user.id
     if user_states.get(user_id) != 'notification':
         return
@@ -1709,7 +1709,7 @@ async def handle_notification_time(event: MessageCreated):
 # ---------- ПРОФИЛЬ ----------
 @dp.message_created(Command("profile"))
 @dp.message_created()
-async def show_profile(event: MessageCreated):
+async def show_profile(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if message.text != "👤 Мой профиль":
         return
@@ -1775,7 +1775,7 @@ async def show_profile(event: MessageCreated):
 # ---------- МОИ ЦЕЛИ ----------
 @dp.message_created(Command("goals"))
 @dp.message_created()
-async def show_goals(event: MessageCreated):
+async def show_goals(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if event.message.body.text != "🎯 Мои цели":
         return
@@ -1820,7 +1820,7 @@ async def show_goals(event: MessageCreated):
 
 # ---------- ОБРАБОТЧИК ГЛАВНОГО МЕНЮ ----------
 @dp.message_created()
-async def handle_main_menu(event: MessageCreated):
+async def handle_main_menu(event: MessageCreated,bot: Bot):
     # 1. Получаем ID пользователя
     user_id = event.message.from_user.id
 
@@ -1896,7 +1896,7 @@ async def handle_main_menu(event: MessageCreated):
 
 # ---------- ВВОД ПРИЕМА ПИЩИ ----------
 @dp.message_created()
-async def start_meal_input(event: MessageCreated):
+async def start_meal_input(event: MessageCreated,bot: Bot):
      # Проверяем, что сообщение — это нужный текст
     if event.message.body.text != "🍽 Ввести прием пищи":
         return
@@ -1910,7 +1910,7 @@ async def start_meal_input(event: MessageCreated):
 
 
 @dp.message_created()
-async def meal_type_handler(event: MessageCreated):
+async def meal_type_handler(event: MessageCreated,bot: Bot):
     user_id = event.message.from_user.id
     if user_states.get(user_id) != 'meal_type':
         return
@@ -1932,7 +1932,7 @@ async def meal_type_handler(event: MessageCreated):
 
 
 @dp.message_created()
-async def product_name_handler(event: MessageCreated):
+async def product_name_handler(event: MessageCreated,bot: Bot):
     user_id = event.message.from_user.id
     if user_states.get(user_id) != 'product_name':
         return
@@ -1975,7 +1975,7 @@ async def product_name_handler(event: MessageCreated):
 
 
 @dp.message_created()
-async def grams_handler(event: MessageCreated):
+async def grams_handler(event: MessageCreated,bot: Bot):
     user_id =event.message.from_user.id
     if user_states.get(user_id) != 'grams':
         return
@@ -2057,10 +2057,7 @@ async def grams_handler(event: MessageCreated):
 
 
 # ---------- ОТМЕНА ----------
-@dp.message_created(Command("cancel"))
-async def cancel(event:MessageCreated, bot:Bot)
-    await bot.delete_webhook()
-    await dp.start_polling(bot)):
+async def cancel(event: MessageCreated, bot: Bot):
     user_id = event.message.from_user.id
     user_states.pop(user_id, None)
     user_meal_data.pop(user_id, None)
