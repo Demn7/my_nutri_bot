@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from datetime import time, timedelta
 from flask import Flask
 from maxapi import Bot, Dispatcher
-from maxapi.filters import CommandStart, Command
+from maxapi.filters import Command
 from maxapi.types import MessageCreated
 
 from database import update_visit_counter
@@ -741,7 +741,7 @@ def generate_local_recommendations(user_data, nutrition_data):
 dp = Dispatcher()
 
 # ---------- СТАРТ ----------
-@dp.message_created(CommandStart())
+@dp.message_created(Command("start"))
 async def start_command(event: MessageCreated, bot: Bot):
     user = event.message.from_user
     visit_count = update_visit_counter(
