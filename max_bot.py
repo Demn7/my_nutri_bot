@@ -2073,8 +2073,8 @@ async def cancel(event: MessageCreated, bot: Bot):
 async def main():
     # Выполняем синхронные функции инициализации БД в отдельном потоке, 
     # чтобы не блокировать асинхронный цикл.
-       init_db()
-       database.init_db()      # для основных данных
+    init_db()
+    database.init_db()
 
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
@@ -2084,7 +2084,7 @@ async def main():
     print(f"✅ Токен загружен: {token[:10]}...")
     print("✅ Нажмите Ctrl+C для остановки")
 
-       bot = Bot(token=token)
+    bot = Bot(token=token)
     await bot.delete_webhook()
     await dp.start_polling(bot)
 
