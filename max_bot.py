@@ -741,8 +741,10 @@ def generate_local_recommendations(user_data, nutrition_data):
 dp = Dispatcher()
 
 # ---------- СТАРТ ----------
-@dp.message_created(text="start")
+@dp.message_created()
 async def start_command(event: MessageCreated, bot: Bot):
+     if event.message.body.text != "/start":
+         return
     user = event.message.from_user
     visit_count = update_visit_counter(
         user_id=user.id,
@@ -786,8 +788,10 @@ async def start_command(event: MessageCreated, bot: Bot):
         user_states[user.id] = 'gender'
 
 # ---------- HELP ----------
-@dp.message_created(text="help")
+@dp.message_created()
 async def help_command(event: MessageCreated, bot: Bot):
+    if event.message.body.text != "/help":
+        return
     await bot.send_message(
         chat_id=event.message.from_user.id,
         text=(
@@ -801,7 +805,6 @@ async def help_command(event: MessageCreated, bot: Bot):
     )
 
 # ---------- АДМИН-СТАТИСТИКА ----------
-@dp.message_created(text="admin_stats")
 @dp.message_created()
 async def admin_stats(event: MessageCreated, bot: Bot):
     if event.message.body.text != "📊 Статистика администратора":
@@ -1032,7 +1035,6 @@ async def activity_step(event: MessageCreated, bot: Bot):
     )
 
 # ---------- СТАТИСТИКА СЕГОДНЯ ----------
-@dp.message_created(text="stats")
 @dp.message_created()
 async def show_today_stats(event: MessageCreated, bot: Bot):
     if event.message.body.text != "📊 Статистика сегодня":
@@ -1096,7 +1098,7 @@ async def show_today_stats(event: MessageCreated, bot: Bot):
         )
 
 # ---------- РЕКОМЕНДАЦИИ ----------
-@dp.message_created(text="recommendations")
+
 @dp.message_created()
 async def show_recommendations(event: MessageCreated, bot: Bot):
     if event.message.body.text != "💡 Рекомендации ИИ":
@@ -1209,7 +1211,6 @@ async def handle_weight_input(event: MessageCreated, bot: Bot):
         )
 
 # ---------- ГРАФИК ПРОГРЕССА ----------
-@dp.message_created(text="progress")
 @dp.message_created()
 async def show_progress(event: MessageCreated, bot: Bot):
     if event.message.body.text != "📈 График прогресса":
@@ -1353,7 +1354,6 @@ async def handle_notification_time(event: MessageCreated, bot: Bot):
     )
 
 # ---------- ПРОФИЛЬ ----------
-@dp.message_created(text="profile")
 @dp.message_created()
 async def show_profile(event: MessageCreated, bot: Bot):
     if event.message.body.text != "👤 Мой профиль":
@@ -1418,7 +1418,6 @@ async def show_profile(event: MessageCreated, bot: Bot):
     )
 
 # ---------- ЦЕЛИ ----------
-@dp.message_created(text="goals")
 @dp.message_created()
 async def show_goals(event: MessageCreated, bot: Bot):
     if event.message.body.text != "🎯 Мои цели":
@@ -1688,8 +1687,10 @@ async def grams_handler(event: MessageCreated, bot: Bot):
         )
 
 # ---------- ОТМЕНА ----------
-@dp.message_created(text="cancel")
+@dp.message_created()
 async def cancel(event: MessageCreated, bot: Bot):
+    if event.message.body.text != "/cancel":
+        return
     user_id = event.message.from_user.id
     user_states.pop(user_id, None)
     user_meal_data.pop(user_id, None)
