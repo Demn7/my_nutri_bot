@@ -742,8 +742,8 @@ dp = Dispatcher()
 # ---------- СТАРТ ----------
 @dp.message_created()
 async def start_command(event: MessageCreated, bot: Bot):
-     if event.message.body.text != "/start":
-         return
+    if event.message.body.text != "/start":
+        return
     user = event.message.from_user
     visit_count = update_visit_counter(
         user_id=user.id,
