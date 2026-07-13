@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 from datetime import time, timedelta
 from flask import Flask
 from maxapi import Bot, Dispatcher
-from maxapi.filters import text
 from maxapi.types import MessageCreated
 
 from database import update_visit_counter
