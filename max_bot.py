@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from datetime import time, timedelta
 from flask import Flask
 from maxapi import Bot, Dispatcher
+from maxapi.types import BotStarted
 from maxapi.types import MessageCreated
 
 from database import update_visit_counter
@@ -739,6 +740,14 @@ def generate_local_recommendations(user_data, nutrition_data):
 # ======================== ДИСПЕТЧЕР ========================
 dp = Dispatcher()
 
+# ---------- ОБРАБОТЧИК ПЕРВОГО ЗАПУСКА ----------
+@dp.bot_started()
+async def bot_started(event: BotStarted):
+    await event.bot.send_message(
+        chat_id=event.chat_id,
+        text='👋 Привет! Нажми /start, чтобы начать работу.'
+    )
+    
 # ---------- СТАРТ ----------
 @dp.message_created()
 async def start_command(event: MessageCreated, bot: Bot):
