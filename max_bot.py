@@ -19,6 +19,29 @@ from database import update_visit_counter
 from database import init_db as init_visits_db
 import database
 
+MAX_BOT_TOKEN = os.getenv('MAX_BOT_TOKEN')
+if not MAX_BOT_TOKEN:
+    raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения")
+
+# ============================================================
+# 👇 СЮДА ВСТАВЛЯЕМ ФУНКЦИЮ
+# ============================================================
+async def create_subscription():
+    url = "https://platform-api2.max.ru/subscriptions"
+    headers = {
+        "Authorization": f"{MAX_BOT_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "url": "https://my-nutri-bot-max.onrender.com/webhook",
+        "update_types": ["message_created", "bot_started"]
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=data) as response:
+            result = await response.json()
+            print(f"📡 Результат создания подписки: {result}")
+
 # Минимальный веб-сервер для Render
 web_app = Flask('')
 
@@ -41,10 +64,7 @@ logger = logging.getLogger(__name__)
 # Ключи API
 CALORIE_NINJAS_API_KEY = os.getenv('CALORIE_NINJAS_API_KEY', "kq1fOCH5cJ7wk+hwSrsdBA==k5Nqdgg0JB31Essz")
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', "sk-your-deepseek-api-key-here")
-MAX_BOT_TOKEN = os.getenv('MAX_BOT_TOKEN')
 
-if not MAX_BOT_TOKEN:
-    raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения")
 
 # ======================== ГЛОБАЛЬНЫЕ СЛОВАРИ ========================
 user_states = {}
@@ -1715,18 +1735,23 @@ async def main():
 
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
-        raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения")
+        raise ValueError("❌ Токен MAX бота не найден!")
 
     print("🤖 MAX-бот-нутрициолог запускается...")
     print(f"✅ Токен загружен: {token[:10]}...")
-    print("✅ Нажмите Ctrl+C для остановки")
 
     bot = Bot(token=token)
-        # Настраиваем Webhook
+
+    # Создаем подписку через код
+    await create_subscription()
+
+    # Настраиваем Webhook
     await bot.set_webhook(url='https://my-nutri-bot-max.onrender.com/webhook')
+
     print("✅ Бот готов к работе через Webhook!")
-        # Бот работает в фоне, ожидая Webhook-запросы
-    await asyncio.Event().wait()  # Чтобы бот не завершался сразу
+    print("✅ Нажмите Ctrl+C для остановки")
+
+    await asyncio.Event().wait()
     
 if __name__ == '__main__':
     import asyncio
