@@ -26,6 +26,7 @@ if not MAX_BOT_TOKEN:
 # ============================================================
 # 👇 СЮДА ВСТАВЛЯЕМ ФУНКЦИЮ
 # ============================================================
+
 async def create_subscription():
     url = "https://platform-api2.max.ru/subscriptions"
     headers = {
@@ -36,8 +37,13 @@ async def create_subscription():
         "url": "https://my-nutri-bot-max.onrender.com/webhook",
         "update_types": ["message_created", "bot_started"]
     }
-    
-    connector = aiohttp.TCPConnector(ssl=False)
+
+    # 🔧 Отключаем проверку SSL-сертификата
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+
+    connector = aiohttp.TCPConnector(ssl=ssl_context)
     async with aiohttp.ClientSession(connector=connector) as session:
         async with session.post(url, headers=headers, json=data) as response:
             result = await response.json()
