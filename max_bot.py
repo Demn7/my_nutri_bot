@@ -1722,9 +1722,12 @@ async def main():
     print("✅ Нажмите Ctrl+C для остановки")
 
     bot = Bot(token=token)
-    await bot.delete_webhook()
-    await dp.start_polling(bot)
-
+        # Настраиваем Webhook
+    await bot.set_webhook(url='https://my-nutri-bot-max.onrender.com/webhook')
+    print("✅ Бот готов к работе через Webhook!")
+        # Бот работает в фоне, ожидая Webhook-запросы
+    await asyncio.Event().wait()  # Чтобы бот не завершался сразу
+    
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
