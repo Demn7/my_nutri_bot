@@ -37,7 +37,8 @@ async def create_subscription():
         "update_types": ["message_created", "bot_started"]
     }
     
-    async with aiohttp.ClientSession() as session:
+    connector = aiohttp.TCPConnector(ssl=False)
+    async with aiohttp.ClientSession(connector=connector) as session:
         async with session.post(url, headers=headers, json=data) as response:
             result = await response.json()
             print(f"📡 Результат создания подписки: {result}")
