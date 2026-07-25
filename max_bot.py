@@ -1,6 +1,7 @@
 import logging
 import sqlite3
 import aiohttp
+import tempfile
 import csv
 import io
 import datetime
@@ -29,7 +30,6 @@ if not MAX_BOT_TOKEN:
 # ============================================================
 
 async def create_subscription():
-    """Создание Webhook-подписки для MAX с использованием сертификатов Минцифры"""
     url = "https://platform-api2.max.ru/subscriptions"
     headers = {
         "Authorization": f"{MAX_BOT_TOKEN}",
@@ -40,25 +40,22 @@ async def create_subscription():
         "update_types": ["message_created", "bot_started"]
     }
 
-    # Путь к файлу сертификатов (объединённый bundle)
-    ca_bundle = os.path.join(os.path.dirname(os.path.abspath(__file__)), "max_ca_bundle.pem")
-
-    # Проверяем, существует ли файл сертификата
-    if not os.path.exists(ca_bundle):
-        logger.warning(f"⚠️ Файл сертификата не найден: {ca_bundle}")
-        logger.warning("⚠️ Использую стандартный SSL-контекст (может не сработать)")
-
-    # Создаём SSL-контекст с кастомным bundle, если файл существует
-    try:
-        ssl_context = ssl.create_default_context(cafile=ca_bundle) if os.path.exists(ca_bundle) else ssl.create_default_context()
-        connector = aiohttp.TCPConnector(ssl=ssl_context)
-    except Exception as e:
-        logger.error(f"❌ Ошибка при создании SSL-контекста: {e}")
-        # Fallback на отключение проверки SSL (как крайний случай)
+    ca_pem_content = os.getenv("MAX_CA_BUNDLE_PEM")
+    if not ca_pem_content:
+        logger.warning("⚠️ MAX_CA_BUNDLE_PEM не задан. Использую fallback без проверки SSL.")
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
-        connector = aiohttp.TCPConnector(ssl=ssl_context)
+    else:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".pem") as f:
+            f.write(ca_pem_content)
+            ca_bundle_path = f.name
+            logger.info(f"✅ Временный файл сертификата создан: {ca_bundle_path}")
+
+        ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
+
+    # 👇 ЭТА СТРОКА ДОЛЖНА БЫТЬ!
+    connector = aiohttp.TCPConnector(ssl=ssl_context)
 
     async with aiohttp.ClientSession(connector=connector) as session:
         try:
