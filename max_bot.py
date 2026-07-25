@@ -1772,8 +1772,7 @@ async def main():
     bot = Bot(token=token)
 
     # Настраиваем Webhook
-    await bot.set_webhook(url='https://my-nutri-bot-max.onrender.com/webhook')
-
+   
     print("✅ Бот готов к работе через Webhook!")
     print("✅ Нажмите Ctrl+C для остановки")
 
