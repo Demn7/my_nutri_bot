@@ -9,6 +9,7 @@ import os
 import threading
 import asyncio
 import matplotlib.pyplot as plt
+import ssl
 from datetime import time, timedelta
 from flask import Flask
 from maxapi import Bot, Dispatcher
@@ -28,6 +29,7 @@ if not MAX_BOT_TOKEN:
 # ============================================================
 
 async def create_subscription():
+    """Создание Webhook-подписки для MAX с использованием сертификатов Минцифры"""
     url = "https://platform-api2.max.ru/subscriptions"
     headers = {
         "Authorization": f"{MAX_BOT_TOKEN}",
@@ -38,16 +40,36 @@ async def create_subscription():
         "update_types": ["message_created", "bot_started"]
     }
 
-    # 🔧 Отключаем проверку SSL-сертификата
-    ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE
+    # Путь к файлу сертификатов (объединённый bundle)
+    ca_bundle = os.path.join(os.path.dirname(os.path.abspath(__file__)), "max_ca_bundle.pem")
 
-    connector = aiohttp.TCPConnector(ssl=ssl_context)
+    # Проверяем, существует ли файл сертификата
+    if not os.path.exists(ca_bundle):
+        logger.warning(f"⚠️ Файл сертификата не найден: {ca_bundle}")
+        logger.warning("⚠️ Использую стандартный SSL-контекст (может не сработать)")
+
+    # Создаём SSL-контекст с кастомным bundle, если файл существует
+    try:
+        ssl_context = ssl.create_default_context(cafile=ca_bundle) if os.path.exists(ca_bundle) else ssl.create_default_context()
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+    except Exception as e:
+        logger.error(f"❌ Ошибка при создании SSL-контекста: {e}")
+        # Fallback на отключение проверки SSL (как крайний случай)
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+
     async with aiohttp.ClientSession(connector=connector) as session:
-        async with session.post(url, headers=headers, json=data) as response:
-            result = await response.json()
-            print(f"📡 Результат создания подписки: {result}")
+        try:
+            async with session.post(url, headers=headers, json=data) as response:
+                result = await response.json()
+                logger.info(f"📡 Результат создания подписки: {result}")
+                return result
+        except Exception as e:
+            logger.error(f"💥 Ошибка при запросе к API MAX: {e}")
+            return None
+
 
 # Минимальный веб-сервер для Render
 web_app = Flask('')
@@ -1742,15 +1764,15 @@ async def main():
 
     token = os.getenv('MAX_BOT_TOKEN')
     if not token:
-        raise ValueError("❌ Токен MAX бота не найден!")
+        raise ValueError("❌ Токен MAX бота не найден! Добавьте MAX_BOT_TOKEN в переменные окружения")
 
     print("🤖 MAX-бот-нутрициолог запускается...")
     print(f"✅ Токен загружен: {token[:10]}...")
 
-    bot = Bot(token=token)
-
-    # Создаем подписку через код
+    # Создаём подписку
     await create_subscription()
+
+    bot = Bot(token=token)
 
     # Настраиваем Webhook
     await bot.set_webhook(url='https://my-nutri-bot-max.onrender.com/webhook')
@@ -1758,8 +1780,10 @@ async def main():
     print("✅ Бот готов к работе через Webhook!")
     print("✅ Нажмите Ctrl+C для остановки")
 
+    # Ожидаем входящие запросы
     await asyncio.Event().wait()
-    
+
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
+
