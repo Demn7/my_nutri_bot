@@ -12,7 +12,8 @@ import asyncio
 import matplotlib.pyplot as plt
 import ssl
 from datetime import time, timedelta
-from flask import Flask
+from flask import Flask, request, jsonify
+import json
 from maxapi import Bot, Dispatcher
 from maxapi.types import BotStarted
 from maxapi.types import MessageCreated
@@ -76,6 +77,26 @@ web_app = Flask('')
 def health():
     return "OK", 200
 
+@web_app.route('/webhook', methods=['POST'])
+def webhook():
+    data = request.get_json()
+    if not data:
+        return jsonify({"ok": False, "message": "No data"}), 400
+
+    print(f"📩 Получено событие: {json.dumps(data, ensure_ascii=False)}")
+
+    # Передаём событие в диспетчер MAX
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(dp.feed_webhook_update(data))
+    except Exception as e:
+        print(f"❌ Ошибка обработки события: {e}")
+        return jsonify({"ok": False, "message": str(e)}), 500
+    finally:
+        loop.close()
+
+    return jsonify({"ok": True}), 200
 def run_web():
     port = int(os.environ.get("PORT", 8080))
     web_app.run(host='0.0.0.0', port=port)
