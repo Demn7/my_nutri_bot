@@ -76,7 +76,18 @@ web_app = Flask('')
 @web_app.route('/health')
 def health():
     return "OK", 200
-
+    
+@web_app.route('/webhook', methods=['GET', 'POST'])
+def webhook_debug():
+    print("🔔 Динь! Кто-то позвонил в /webhook!")
+    print(f"📨 Метод: {request.method}")
+    print(f"📨 Заголовки: {request.headers}")
+    if request.method == 'POST':
+        print(f"📨 Тело: {request.get_json()}")
+    else:
+        print("📨 Это был GET-запрос (просто проверка)")
+    return "OK", 200
+    
 @web_app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.get_json()
