@@ -1797,8 +1797,12 @@ async def main():
     print("✅ Бот готов к работе через Webhook!")
     print("✅ Нажмите Ctrl+C для остановки")
 
-    # Ожидаем входящие запросы
-await asyncio.Future()  # Ждёт вечно
+ # Правильный способ бесконечного ожидания в асинхронной функции
+    try:
+        await asyncio.Event().wait()
+    except KeyboardInterrupt:
+        print("👋 Бот остановлен.")
+        
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
