@@ -1791,8 +1791,6 @@ async def main():
     await create_subscription()
 
     bot = Bot(token=token)
-
-    # Настраиваем Webhook
    
     print("✅ Бот готов к работе через Webhook!")
     print("✅ Нажмите Ctrl+C для остановки")
