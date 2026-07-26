@@ -1798,8 +1798,7 @@ async def main():
     print("✅ Нажмите Ctrl+C для остановки")
 
     # Ожидаем входящие запросы
-    await asyncio.Event().wait()
-
+await asyncio.Future()  # Ждёт вечно
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
