@@ -37,7 +37,7 @@ async def create_subscription():
         "Content-Type": "application/json"
     }
     data = {
-        "url": https://bot-1785333922-5811-kmivanovo.bothost.tech/webhook,
+        "url": https://bothost.ru/blog/post/webhook-max-bot-api,
         "update_types": ["message_created", "bot_started"]
     }
 
