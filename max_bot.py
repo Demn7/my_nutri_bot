@@ -9,6 +9,7 @@ import random
 import os
 import threading
 import asyncio
+import time
 import matplotlib.pyplot as plt
 import ssl
 from datetime import time, timedelta
@@ -111,9 +112,6 @@ def webhook():
 def run_web():
     port = int(os.environ.get("PORT", 8080))
     web_app.run(host='0.0.0.0', port=port)
-
-# Запускаем веб-сервер в отдельном потоке
-threading.Thread(target=run_web, daemon=True).start()
 
 # Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -1813,6 +1811,9 @@ async def main():
         print("👋 Бот остановлен.")
         
 if __name__ == '__main__':
-    import asyncio
+  threading.Thread(target=run_web, daemon=True).start()
+    print("✅ Flask запущен в фоновом потоке")
+    time.sleep(2)
+    print("✅ Порт должен быть открыт")
     asyncio.run(main())
 
