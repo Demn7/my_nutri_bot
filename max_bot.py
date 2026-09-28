@@ -37,7 +37,7 @@ async def create_subscription():
         "Content-Type": "application/json"
     }
     data = {
-        "url": https://bothost.ru/blog/post/webhook-max-bot-api,
+        "url": https://"https://my-nutri-bot.onrender.com/webhook",
         "update_types": ["message_created", "bot_started"]
     }
 
